@@ -41,14 +41,17 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
-uint16_t Wrist_pitch = 0;
 uint16_t elbow = 0;
-uint16_t AD_RES[2];
+uint32_t AD_RES[2];
+
+uint8_t elbow_homing = 0;
+uint32_t elbow_start, elbow_stop;
 
 ADC_ChannelConfTypeDef ADC_CH_Cfg = {0};
 uint32_t ADC_Channels[2] = {ADC_CHANNEL_0, ADC_CHANNEL_1};
@@ -57,6 +60,7 @@ uint32_t ADC_Channels[2] = {ADC_CHANNEL_0, ADC_CHANNEL_1};
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_TIM2_Init(void);
@@ -98,12 +102,15 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_ADC1_Init();
   MX_TIM4_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+
+  HAL_ADC_Start_DMA(&hadc1, AD_RES, 1);
 
   HAL_GPIO_WritePin(STBY_GPIO_Port, STBY_Pin, 1);
   /* USER CODE END 2 */
@@ -115,45 +122,44 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  for (int i=0;i<2;i++) {
-		  ADC_CH_Cfg.Rank = 1;
-		  ADC_CH_Cfg.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-		  ADC_CH_Cfg.Channel = ADC_Channels[i];
-		  HAL_ADC_ConfigChannel(&hadc1, &ADC_CH_Cfg);
-		  HAL_ADC_Start(&hadc1);
-		  HAL_ADC_PollForConversion(&hadc1, 1);
-		  AD_RES[i] = HAL_ADC_GetValue(&hadc1);
+	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0)) elbow_homing = 1;
+
+	  if (elbow_homing) {
+		  while (1) {
+			  TIM4->CCR4 = 32;
+			  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 0);
+			  HAL_GPIO_WritePin(AIN1_GPIO_Port, AIN1_Pin, 1);
+		  }
 	  }
-
-	  TIM2->CCR2 = 64;
-	  TIM4->CCR4 = 64;
-
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 0);
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN1_Pin, 1);
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN2_Pin, 0);
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN1_Pin, 1);
-	  HAL_Delay(200);
-
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 1);
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN1_Pin, 1);
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN2_Pin, 1);
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN1_Pin, 1);
-	  HAL_Delay(1000);
-
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 1);
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN1_Pin, 0);
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN2_Pin, 1);
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN1_Pin, 0);
-	  HAL_Delay(200);
-
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 1);
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN1_Pin, 1);
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN2_Pin, 1);
-	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN1_Pin, 1);
-	  HAL_Delay(1000);
-
-	  TIM2->CCR2 = 0;
-	  TIM4->CCR4 = 0;
+//	  TIM2->CCR2 = 64;
+//	  TIM4->CCR4 = 64;
+//
+//	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 0);
+//	  HAL_GPIO_WritePin(AIN1_GPIO_Port, AIN1_Pin, 1);
+//	  HAL_GPIO_WritePin(BIN2_GPIO_Port, BIN2_Pin, 0);
+//	  HAL_GPIO_WritePin(BIN1_GPIO_Port, BIN1_Pin, 1);
+//	  HAL_Delay(200);
+//
+//	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 1);
+//	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN1_Pin, 1);
+//	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN2_Pin, 1);
+//	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN1_Pin, 1);
+//	  HAL_Delay(1000);
+//
+//	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 1);
+//	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN1_Pin, 0);
+//	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN2_Pin, 1);
+//	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN1_Pin, 0);
+//	  HAL_Delay(200);
+//
+//	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 1);
+//	  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN1_Pin, 1);
+//	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN2_Pin, 1);
+//	  HAL_GPIO_WritePin(AIN2_GPIO_Port, BIN1_Pin, 1);
+//	  HAL_Delay(1000);
+//
+//	  TIM2->CCR2 = 0;
+//	  TIM4->CCR4 = 0;
   }
   /* USER CODE END 3 */
 }
@@ -227,14 +233,14 @@ static void MX_ADC1_Init(void)
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ScanConvMode = ENABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
@@ -243,7 +249,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_0;
+  sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
@@ -365,6 +371,22 @@ static void MX_TIM4_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -384,6 +406,12 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, BIN2_Pin|BIN1_Pin|STBY_Pin|AIN1_Pin
                           |AIN2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : BIN2_Pin BIN1_Pin STBY_Pin AIN1_Pin
                            AIN2_Pin */
