@@ -1,0 +1,327 @@
+2026-04-18 00:00:47,583 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 667666560 Bytes (1073741824)
+2026-04-18 00:00:50,101 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 691783720 Bytes (1073741824)
+2026-04-18 00:00:50,592 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 713277480 Bytes (1073741824)
+2026-04-18 00:00:51,287 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: NVIC
+2026-04-18 00:00:51,288 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: TIM1_8
+2026-04-18 00:00:51,288 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: SYS
+2026-04-18 00:00:51,288 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: GPIO
+2026-04-18 00:00:51,289 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: ADC
+2026-04-18 00:00:51,289 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: RCC
+2026-04-18 00:00:51,290 [INFO] CodeGenerator:892 - code generatio: config db path: /home/anbu/st/stm32cubeide_1.19.0/plugins/com.st.stm32cube.common.mx_6.15.0.202507011659//db/
+2026-04-18 00:00:51,434 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/license.tmp_save
+2026-04-18 00:00:52,074 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/license.tmp
+2026-04-18 00:00:52,156 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/gpio.tmp_save
+2026-04-18 00:00:52,492 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/gpio.tmp
+2026-04-18 00:00:52,676 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_it.c_save
+2026-04-18 00:00:52,957 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_it.c
+2026-04-18 00:00:52,971 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_it.h_save
+2026-04-18 00:00:53,211 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_it.h
+2026-04-18 00:00:53,244 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_hal_msp.c_save
+2026-04-18 00:00:53,547 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_hal_msp.c
+2026-04-18 00:00:53,556 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/system.tmp_save
+2026-04-18 00:00:53,695 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/system.tmp
+2026-04-18 00:00:53,721 [INFO] CodeEngine:321 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_hal_conf.h_save
+2026-04-18 00:00:53,891 [INFO] CodeEngine:345 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_hal_conf.h
+2026-04-18 00:00:53,946 [INFO] ApiDbMcu:532 - Load IP Config File for ADC1
+2026-04-18 00:00:53,966 [INFO] ApiDbMcu:532 - Load IP Config File for TIM4
+2026-04-18 00:00:53,969 [WARN] IPConfigManager:3811 - IP not found : TIM
+2026-04-18 00:00:53,970 [WARN] CodeGenerator:4259 - IP not found : null
+2026-04-18 00:00:53,989 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/main.h_save
+2026-04-18 00:00:54,179 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/main.h
+2026-04-18 00:00:54,204 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/main.c_save
+2026-04-18 00:00:54,479 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/main.c
+2026-04-18 00:00:55,224 [INFO] ProjectBuilder:3606 - Time for Copy HAL[1] : 438mS.
+2026-04-18 00:00:55,232 [INFO] ProjectBuilder:5216 - Project Generator version: 4.7.0-B52
+2026-04-18 00:00:55,382 [INFO] ConfigFileManager:1595 - The Die is : DIE431
+2026-04-18 00:00:56,786 [INFO] ProjectBuilder:5496 - Time for Generating toolchain IDE Files: 1553mS.
+2026-04-18 00:00:56,787 [INFO] ProjectBuilder:3463 - Time for Copy CMSIS : 1mS.
+2026-04-18 00:00:56,798 [INFO] ProjectBuilder:3463 - Time for Copy CMSIS : 1mS.
+2026-04-18 00:01:22,977 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 769376520 Bytes (1073741824)
+2026-04-18 00:01:23,502 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: NVIC
+2026-04-18 00:01:23,503 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: TIM1_8
+2026-04-18 00:01:23,503 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: SYS
+2026-04-18 00:01:23,504 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: GPIO
+2026-04-18 00:01:23,504 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: ADC
+2026-04-18 00:01:23,504 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: RCC
+2026-04-18 00:01:23,505 [INFO] CodeGenerator:892 - code generatio: config db path: /home/anbu/st/stm32cubeide_1.19.0/plugins/com.st.stm32cube.common.mx_6.15.0.202507011659//db/
+2026-04-18 00:01:23,652 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/license.tmp_save
+2026-04-18 00:01:23,800 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/license.tmp
+2026-04-18 00:01:23,838 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/gpio.tmp_save
+2026-04-18 00:01:23,988 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/gpio.tmp
+2026-04-18 00:01:24,099 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_it.c_save
+2026-04-18 00:01:24,257 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_it.c
+2026-04-18 00:01:24,272 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_it.h_save
+2026-04-18 00:01:24,420 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_it.h
+2026-04-18 00:01:24,456 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_hal_msp.c_save
+2026-04-18 00:01:24,683 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_hal_msp.c
+2026-04-18 00:01:24,697 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/system.tmp_save
+2026-04-18 00:01:24,836 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/system.tmp
+2026-04-18 00:01:24,865 [INFO] CodeEngine:321 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_hal_conf.h_save
+2026-04-18 00:01:25,031 [INFO] CodeEngine:345 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_hal_conf.h
+2026-04-18 00:01:25,067 [WARN] IPConfigManager:3811 - IP not found : TIM
+2026-04-18 00:01:25,068 [WARN] CodeGenerator:4259 - IP not found : null
+2026-04-18 00:01:25,086 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/main.h_save
+2026-04-18 00:01:25,252 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/main.h
+2026-04-18 00:01:25,270 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/main.c_save
+2026-04-18 00:01:25,490 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/main.c
+2026-04-18 00:01:26,241 [INFO] ProjectBuilder:3606 - Time for Copy HAL[1] : 447mS.
+2026-04-18 00:01:26,248 [INFO] ProjectBuilder:5216 - Project Generator version: 4.7.0-B52
+2026-04-18 00:01:26,398 [INFO] ConfigFileManager:1595 - The Die is : DIE431
+2026-04-18 00:01:27,457 [INFO] ProjectBuilder:5496 - Time for Generating toolchain IDE Files: 1209mS.
+2026-04-18 00:01:27,458 [INFO] ProjectBuilder:3463 - Time for Copy CMSIS : 0mS.
+2026-04-18 00:01:27,468 [INFO] ProjectBuilder:3463 - Time for Copy CMSIS : 1mS.
+2026-04-18 00:06:07,083 [INFO] Gpio:278 - dependency for GPIO [ADC1, RCC, SYS, TIM2, TIM4]
+2026-04-18 00:06:29,362 [INFO] Gpio:278 - dependency for GPIO [ADC1, RCC, SYS, TIM2, TIM4]
+2026-04-18 00:06:37,012 [INFO] Gpio:278 - dependency for GPIO [ADC1, RCC, SYS, TIM2, TIM4]
+2026-04-18 00:06:42,946 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-04-18 00:06:44,668 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 884480168 Bytes (1073741824)
+2026-04-18 00:06:46,449 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 911220904 Bytes (1073741824)
+2026-04-18 00:06:46,916 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 935338152 Bytes (1073741824)
+2026-04-18 00:06:47,419 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: NVIC
+2026-04-18 00:06:47,420 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: TIM1_8
+2026-04-18 00:06:47,420 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: TIM1_8
+2026-04-18 00:06:47,420 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: SYS
+2026-04-18 00:06:47,421 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: GPIO
+2026-04-18 00:06:47,421 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: ADC
+2026-04-18 00:06:47,421 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: RCC
+2026-04-18 00:06:47,422 [INFO] CodeGenerator:892 - code generatio: config db path: /home/anbu/st/stm32cubeide_1.19.0/plugins/com.st.stm32cube.common.mx_6.15.0.202507011659//db/
+2026-04-18 00:06:47,565 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/license.tmp_save
+2026-04-18 00:06:48,208 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/license.tmp
+2026-04-18 00:06:48,279 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/gpio.tmp_save
+2026-04-18 00:06:48,714 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/gpio.tmp
+2026-04-18 00:06:49,178 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_it.c_save
+2026-04-18 00:06:49,553 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_it.c
+2026-04-18 00:06:49,570 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_it.h_save
+2026-04-18 00:06:49,895 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_it.h
+2026-04-18 00:06:49,931 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_hal_msp.c_save
+2026-04-18 00:06:50,432 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_hal_msp.c
+2026-04-18 00:06:50,444 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/system.tmp_save
+2026-04-18 00:06:50,729 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/system.tmp
+2026-04-18 00:06:50,763 [INFO] CodeEngine:321 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_hal_conf.h_save
+2026-04-18 00:06:51,047 [INFO] CodeEngine:345 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_hal_conf.h
+2026-04-18 00:06:51,137 [INFO] ApiDbMcu:532 - Load IP Config File for TIM2
+2026-04-18 00:06:51,139 [WARN] IPConfigManager:3811 - IP not found : TIM
+2026-04-18 00:06:51,140 [WARN] CodeGenerator:4259 - IP not found : null
+2026-04-18 00:06:51,157 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/main.h_save
+2026-04-18 00:06:51,390 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/main.h
+2026-04-18 00:06:51,407 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/main.c_save
+2026-04-18 00:06:51,712 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/main.c
+2026-04-18 00:06:52,474 [INFO] ProjectBuilder:3606 - Time for Copy HAL[1] : 449mS.
+2026-04-18 00:06:52,485 [INFO] ProjectBuilder:5216 - Project Generator version: 4.7.0-B52
+2026-04-18 00:06:52,638 [INFO] ConfigFileManager:1595 - The Die is : DIE431
+2026-04-18 00:06:53,902 [INFO] ProjectBuilder:5496 - Time for Generating toolchain IDE Files: 1418mS.
+2026-04-18 00:06:53,904 [INFO] ProjectBuilder:3463 - Time for Copy CMSIS : 1mS.
+2026-04-18 00:06:53,913 [INFO] ProjectBuilder:3463 - Time for Copy CMSIS : 0mS.
+2026-04-18 00:07:32,671 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,673 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,674 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,675 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,675 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,676 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,676 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,677 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,677 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,677 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,677 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,678 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,678 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,678 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,707 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,747 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,747 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,748 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,748 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,749 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,749 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,750 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,751 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,751 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,752 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,752 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,752 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,753 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,753 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:32,781 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,571 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,572 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,572 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,573 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,573 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,574 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,574 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,575 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,575 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,576 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,576 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,576 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,577 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,577 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,599 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,631 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,631 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,632 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,633 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,633 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,633 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,633 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,634 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,634 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,634 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,635 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,635 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,635 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,635 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,657 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,769 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,770 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,771 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,771 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,771 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,772 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,772 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,773 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,773 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,774 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,775 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,775 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,775 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,775 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,799 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,838 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,838 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,839 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,839 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,839 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,840 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,840 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,840 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,840 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,841 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,841 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,841 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,841 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,841 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:07:34,869 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:14,110 [INFO] SpinnerEditorADC:65 - is string kkkk
+2026-04-18 00:08:15,394 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,402 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,402 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,403 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,403 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,404 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,404 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,405 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,405 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,406 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,406 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,406 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,406 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,407 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,418 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,445 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,447 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,447 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,448 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,448 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,449 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,449 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,450 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,450 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,451 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,451 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,452 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,452 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,452 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,465 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,502 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,503 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,503 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,504 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,504 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,504 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,504 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,505 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,505 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,505 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,505 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,505 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,506 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,506 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:08:15,528 [INFO] ADCParametersView:116 -                Rank 1 : false
+2026-04-18 00:09:12,221 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 892764400 Bytes (1073741824)
+2026-04-18 00:09:13,684 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 914784496 Bytes (1073741824)
+2026-04-18 00:09:14,175 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 930513136 Bytes (1073741824)
+2026-04-18 00:09:14,688 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: NVIC
+2026-04-18 00:09:14,688 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: TIM1_8
+2026-04-18 00:09:14,688 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: TIM1_8
+2026-04-18 00:09:14,688 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: SYS
+2026-04-18 00:09:14,689 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: GPIO
+2026-04-18 00:09:14,689 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: ADC
+2026-04-18 00:09:14,689 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: RCC
+2026-04-18 00:09:14,698 [INFO] CodeGenerator:892 - code generatio: config db path: /home/anbu/st/stm32cubeide_1.19.0/plugins/com.st.stm32cube.common.mx_6.15.0.202507011659//db/
+2026-04-18 00:09:14,830 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/license.tmp_save
+2026-04-18 00:09:14,980 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/license.tmp
+2026-04-18 00:09:15,036 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/gpio.tmp_save
+2026-04-18 00:09:15,184 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/gpio.tmp
+2026-04-18 00:09:15,329 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_it.c_save
+2026-04-18 00:09:15,496 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_it.c
+2026-04-18 00:09:15,515 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_it.h_save
+2026-04-18 00:09:15,677 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_it.h
+2026-04-18 00:09:15,718 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_hal_msp.c_save
+2026-04-18 00:09:15,964 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_hal_msp.c
+2026-04-18 00:09:15,977 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/system.tmp_save
+2026-04-18 00:09:16,115 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/system.tmp
+2026-04-18 00:09:16,143 [INFO] CodeEngine:321 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_hal_conf.h_save
+2026-04-18 00:09:16,304 [INFO] CodeEngine:345 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_hal_conf.h
+2026-04-18 00:09:16,336 [WARN] IPConfigManager:3811 - IP not found : TIM
+2026-04-18 00:09:16,336 [WARN] CodeGenerator:4259 - IP not found : null
+2026-04-18 00:09:16,351 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/main.h_save
+2026-04-18 00:09:16,469 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/main.h
+2026-04-18 00:09:16,485 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/main.c_save
+2026-04-18 00:09:16,658 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/main.c
+2026-04-18 00:09:17,304 [INFO] ProjectBuilder:3606 - Time for Copy HAL[1] : 387mS.
+2026-04-18 00:09:17,313 [INFO] ProjectBuilder:5216 - Project Generator version: 4.7.0-B52
+2026-04-18 00:09:17,458 [INFO] ConfigFileManager:1595 - The Die is : DIE431
+2026-04-18 00:09:18,460 [INFO] ProjectBuilder:5496 - Time for Generating toolchain IDE Files: 1146mS.
+2026-04-18 00:09:18,462 [INFO] ProjectBuilder:3463 - Time for Copy CMSIS : 2mS.
+2026-04-18 00:09:18,475 [INFO] ProjectBuilder:3463 - Time for Copy CMSIS : 1mS.
+2026-04-18 00:09:49,006 [INFO] Gpio:278 - dependency for GPIO [ADC1, RCC, SYS, TIM2, TIM4]
+2026-04-18 00:12:24,038 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 858708408 Bytes (1073741824)
+2026-04-18 00:12:25,759 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 880747232 Bytes (1073741824)
+2026-04-18 00:12:26,299 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 897505720 Bytes (1073741824)
+2026-04-18 00:12:26,846 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: NVIC
+2026-04-18 00:12:26,846 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: TIM1_8
+2026-04-18 00:12:26,846 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: TIM1_8
+2026-04-18 00:12:26,846 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: SYS
+2026-04-18 00:12:26,847 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: GPIO
+2026-04-18 00:12:26,847 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: ADC
+2026-04-18 00:12:26,847 [INFO] BlockDiagram:2775 - set Specific Code input for plugin: RCC
+2026-04-18 00:12:26,848 [INFO] CodeGenerator:892 - code generatio: config db path: /home/anbu/st/stm32cubeide_1.19.0/plugins/com.st.stm32cube.common.mx_6.15.0.202507011659//db/
+2026-04-18 00:12:26,994 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/license.tmp_save
+2026-04-18 00:12:27,133 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/license.tmp
+2026-04-18 00:12:27,178 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/gpio.tmp_save
+2026-04-18 00:12:27,343 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/gpio.tmp
+2026-04-18 00:12:27,478 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_it.c_save
+2026-04-18 00:12:27,643 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_it.c
+2026-04-18 00:12:27,661 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_it.h_save
+2026-04-18 00:12:27,803 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_it.h
+2026-04-18 00:12:27,830 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_hal_msp.c_save
+2026-04-18 00:12:28,058 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/stm32f4xx_hal_msp.c
+2026-04-18 00:12:28,068 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/system.tmp_save
+2026-04-18 00:12:28,176 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/MXTmpFiles/system.tmp
+2026-04-18 00:12:28,197 [INFO] CodeEngine:321 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_hal_conf.h_save
+2026-04-18 00:12:28,368 [INFO] CodeEngine:345 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/stm32f4xx_hal_conf.h
+2026-04-18 00:12:28,397 [WARN] IPConfigManager:3811 - IP not found : TIM
+2026-04-18 00:12:28,398 [WARN] CodeGenerator:4259 - IP not found : null
+2026-04-18 00:12:28,416 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/main.h_save
+2026-04-18 00:12:28,560 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Inc/main.h
+2026-04-18 00:12:28,577 [INFO] CodeEngine:265 - oldGeneratedFile, /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/main.c_save
+2026-04-18 00:12:28,829 [INFO] CodeEngine:289 - Generated code: /mnt/windows_z/Z/projects/robarm/sourcecode/modified_servo_test/Core/Src/main.c
+2026-04-18 00:12:29,570 [INFO] ProjectBuilder:3606 - Time for Copy HAL[1] : 450mS.
+2026-04-18 00:12:29,578 [INFO] ProjectBuilder:5216 - Project Generator version: 4.7.0-B52
+2026-04-18 00:12:29,723 [INFO] ConfigFileManager:1595 - The Die is : DIE431
+2026-04-18 00:12:30,654 [INFO] ProjectBuilder:5496 - Time for Generating toolchain IDE Files: 1076mS.
+2026-04-18 00:12:30,656 [INFO] ProjectBuilder:3463 - Time for Copy CMSIS : 2mS.
+2026-04-18 00:12:30,665 [INFO] ProjectBuilder:3463 - Time for Copy CMSIS : 0mS.
+2026-04-18 01:04:16,714 [INFO] WebApp:194 - Connection lost
+2026-04-18 01:37:43,845 [INFO] WebApp:191 - Connection restablished
