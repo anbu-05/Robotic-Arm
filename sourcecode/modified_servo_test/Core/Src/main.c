@@ -45,16 +45,18 @@ DMA_HandleTypeDef hdma_adc1;
 
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim9;
 
 /* USER CODE BEGIN PV */
-uint16_t elbow = 0;
-uint32_t AD_RES[2];
+uint32_t AD_RES_curr[2];
+uint32_t AD_RES_prev[2];
+uint8_t correct_dir = 1;
 
 uint8_t elbow_homing = 0;
-uint32_t elbow_start, elbow_stop;
+uint32_t elbow_start, elbow_end, elbow_neutral;
+uint32_t elbow_neutral_delta_curr, elbow_neutral_delta_prev;
 
-ADC_ChannelConfTypeDef ADC_CH_Cfg = {0};
-uint32_t ADC_Channels[2] = {ADC_CHANNEL_0, ADC_CHANNEL_1};
+uint8_t button;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,12 +66,20 @@ static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM4_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_TIM9_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
+{
+    if (elbow_homing) {
+    	AD_RES_prev[0] = AD_RES_curr[0];
+    	elbow_neutral_delta_prev = elbow_neutral_delta_curr;
+    }
+}
 
 /* USER CODE END 0 */
 
@@ -106,11 +116,12 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM4_Init();
   MX_TIM2_Init();
+  MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
 
-  HAL_ADC_Start_DMA(&hadc1, AD_RES, 1);
+  HAL_ADC_Start_DMA(&hadc1, AD_RES_curr, 2);
 
   HAL_GPIO_WritePin(STBY_GPIO_Port, STBY_Pin, 1);
   /* USER CODE END 2 */
@@ -122,14 +133,78 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0)) elbow_homing = 1;
+	  button = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+	  if (!button) elbow_homing = 1;
+//	  elbow_homing = 1;
 
 	  if (elbow_homing) {
-		  while (1) {
-			  TIM4->CCR4 = 32;
-			  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 0);
-			  HAL_GPIO_WritePin(AIN1_GPIO_Port, AIN1_Pin, 1);
-		  }
+//		  HAL_TIM_Base_Start_IT(&htim9);
+//		  while (1) {
+//			  TIM4->CCR4 = 32;
+//			  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 0);
+//			  HAL_GPIO_WritePin(AIN1_GPIO_Port, AIN1_Pin, 1);
+//			  if (abs(AD_RES_prev[0] - AD_RES_curr[0]) < 20) {
+//				  elbow_start = AD_RES_curr[0];
+//				  break;
+//			  }
+//			  HAL_Delay(1);
+//		  }
+//
+//		  TIM4->CCR4 = 128;
+//		  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 1);
+//		  HAL_GPIO_WritePin(AIN1_GPIO_Port, AIN1_Pin, 1);
+//
+//		  HAL_Delay(2000);
+//
+//		  while (1) {
+//			  TIM4->CCR4 = 32;
+//			  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 1);
+//			  HAL_GPIO_WritePin(AIN1_GPIO_Port, AIN1_Pin, 0);
+//			  if (abs(AD_RES_prev[0] - AD_RES_curr[0]) < 20) {
+//				  elbow_end = AD_RES_curr[0];
+//				  break;
+//			  }
+//			  HAL_Delay(1);
+//		  }
+//
+//		  TIM4->CCR4 = 128;
+//		  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 1);
+//		  HAL_GPIO_WritePin(AIN1_GPIO_Port, AIN1_Pin, 1);
+//
+//		  HAL_Delay(2000);
+//
+//		  elbow_neutral = (elbow_end + elbow_start) / 2;
+//
+////		  uint8_t correct_dir = 1;
+//
+//		  while (correct_dir) {
+//			  elbow_neutral_delta_curr = abs(elbow_neutral - AD_RES_curr[0]);
+//			  if (abs(AD_RES_prev[0] - AD_RES_curr[0]) < 20) {
+//				  correct_dir = 0;
+//				  break;
+//			  } else if (abs(elbow_neutral_delta_prev - elbow_neutral_delta_curr) < 20) {
+//				  correct_dir = 0;
+//				  break;
+//			  }
+//			  TIM4->CCR4 = 32;
+//			  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 1);
+//			  HAL_GPIO_WritePin(AIN1_GPIO_Port, AIN1_Pin, 0);
+//		  }
+//
+//		  TIM4->CCR4 = 128;
+//		  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 1);
+//		  HAL_GPIO_WritePin(AIN1_GPIO_Port, AIN1_Pin, 1);
+
+		  HAL_Delay(2000);
+
+//		  while (elbow_neutral_delta_curr > 10) {
+//			  TIM4->CCR4 = 32;
+//			  HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, 0);
+//			  HAL_GPIO_WritePin(AIN1_GPIO_Port, AIN1_Pin, 1);
+//		  }
+
+		  elbow_homing = 0;
+//		  HAL_TIM_Base_Stop_IT(&htim9);
 	  }
 //	  TIM2->CCR2 = 64;
 //	  TIM4->CCR4 = 64;
@@ -239,7 +314,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.NbrOfConversion = 2;
   hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -252,6 +327,15 @@ static void MX_ADC1_Init(void)
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = 2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -371,6 +455,44 @@ static void MX_TIM4_Init(void)
 }
 
 /**
+  * @brief TIM9 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM9_Init(void)
+{
+
+  /* USER CODE BEGIN TIM9_Init 0 */
+
+  /* USER CODE END TIM9_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+
+  /* USER CODE BEGIN TIM9_Init 1 */
+
+  /* USER CODE END TIM9_Init 1 */
+  htim9.Instance = TIM9;
+  htim9.Init.Prescaler = 19;
+  htim9.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim9.Init.Period = 49999;
+  htim9.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim9.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim9) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim9, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM9_Init 2 */
+
+  /* USER CODE END TIM9_Init 2 */
+
+}
+
+/**
   * Enable DMA controller clock
   */
 static void MX_DMA_Init(void)
@@ -410,7 +532,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : PA0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : BIN2_Pin BIN1_Pin STBY_Pin AIN1_Pin

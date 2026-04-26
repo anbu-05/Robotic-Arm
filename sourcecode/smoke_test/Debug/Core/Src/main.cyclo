@@ -1,0 +1,9 @@
+../Core/Src/main.c:44:6:USB_CDC_RxHandler	1
+../Core/Src/main.c:50:6:HAL_GPIO_EXTI_Callback	2
+../Core/Src/main.c:63:5:main	1
+../Core/Src/main.c:110:6:SystemClock_Config	3
+../Core/Src/main.c:156:13:MX_ADC1_Init	3
+../Core/Src/main.c:205:13:MX_TIM3_Init	7
+../Core/Src/main.c:265:13:MX_TIM4_Init	9
+../Core/Src/main.c:333:13:MX_GPIO_Init	1
+../Core/Src/main.c:402:6:Error_Handler	1
