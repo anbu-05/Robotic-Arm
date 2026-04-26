@@ -7,6 +7,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
+#include <string.h>
+#include <stdio.h>
+extern uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -29,6 +32,21 @@ TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
 uint8_t TxBuffer[] = "Hello World! From STM32 USB CDC Device To Virtual COM Port\r\n";
+volatile uint8_t usb_rx_flag = 0;
+uint32_t usb_rx_len = 0;
+
+typedef struct {
+    uint8_t pwm;
+    uint8_t direction;
+} MotorState;
+
+MotorState motors[6]; // 0:M0A, 1:M0B, 2:M1A, 3:M1B, 4:M2A, 5:M2B
+
+// Debug: track parsing state
+char debug_id[4] = {0};
+uint8_t debug_pwm = 0;
+uint8_t debug_dir = 0;
+int debug_result = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -37,6 +55,7 @@ static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
+void parse_usb_command(char* cmd);
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
 
@@ -44,8 +63,56 @@ static void MX_TIM4_Init(void);
 /* USER CODE BEGIN 0 */
 void USB_CDC_RxHandler(uint8_t* Buf, uint32_t Len)
 {
-	CDC_Transmit_FS(Buf, (uint16_t)Len);
-	HAL_GPIO_TogglePin(usr_led_GPIO_Port, usr_led_Pin);
+	usb_rx_flag = 1;
+	usb_rx_len = Len;
+}
+
+void parse_usb_command(char* cmd)
+{
+    // Design: Parse USB command strings for motor control and safety commands.
+    // Uses %d format specifiers instead of %hhu for sscanf() because embedded systems
+    // have inconsistent support for %hhu. Parse as int then cast to uint8_t for safety.
+    // Motor ID mapping uses simple strcmp chain rather than a lookup table because
+    // there are only 6 motors and clarity is prioritized over micro-optimizations.
+    // The "x" reset command is kept separate from motor commands for explicit intent
+    // and to prevent accidental full-stop from parsing errors.
+    
+    // Remove trailing \r\n if present
+    char* end = cmd + strlen(cmd) - 1;
+    while (end > cmd && (*end == '\r' || *end == '\n')) *end-- = '\0';
+
+    if (strcmp(cmd, "x") == 0) {
+        // Reset all motors' PWMs to 0
+        for (int i = 0; i < 6; i++) {
+            motors[i].pwm = 0;
+        }
+    } else {
+        // Parse motor command: e.g., "M0A 64 1"
+        char id[4];
+        int pwm, dir;
+        int result = sscanf(cmd, "%3s %d %d", id, &pwm, &dir);
+        
+        // Store in globals for debugging
+        debug_result = result;
+        strcpy(debug_id, id);
+        debug_pwm = (uint8_t)pwm;
+        debug_dir = (uint8_t)dir;
+        
+        if (result == 3) {
+            int index = -1;
+            if (strcmp(id, "M0A") == 0) index = 0;
+            else if (strcmp(id, "M0B") == 0) index = 1;
+            else if (strcmp(id, "M1A") == 0) index = 2;
+            else if (strcmp(id, "M1B") == 0) index = 3;
+            else if (strcmp(id, "M2A") == 0) index = 4;
+            else if (strcmp(id, "M2B") == 0) index = 5;
+
+            if (index != -1) {
+                motors[index].pwm = (uint8_t)pwm;
+                motors[index].direction = (uint8_t)dir;
+            }
+        }
+    }
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
@@ -91,6 +158,7 @@ int main(void)
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(usr_led_GPIO_Port, usr_led_Pin, 1);
+  memset(motors, 0, sizeof(motors));
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -100,6 +168,19 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if (usb_rx_flag)
+    {
+        // Parse the received data
+        char temp[APP_RX_DATA_SIZE + 1];
+        memcpy(temp, UserRxBufferFS, usb_rx_len);
+        temp[usb_rx_len] = '\0';
+
+        parse_usb_command(temp);
+
+        CDC_Transmit_FS(UserRxBufferFS, usb_rx_len);
+        HAL_GPIO_TogglePin(usr_led_GPIO_Port, usr_led_Pin);
+        usb_rx_flag = 0;
+    }
 //	  CDC_Transmit_FS(TxBuffer, sizeof(TxBuffer));
 //	  HAL_Delay(100);
   }
@@ -211,7 +292,6 @@ static void MX_TIM3_Init(void)
   /* USER CODE BEGIN TIM3_Init 0 */
   /* USER CODE END TIM3_Init 0 */
 
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
 
@@ -223,15 +303,6 @@ static void MX_TIM3_Init(void)
   htim3.Init.Period = 65535;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
   if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
   {
     Error_Handler();
@@ -271,7 +342,6 @@ static void MX_TIM4_Init(void)
   /* USER CODE BEGIN TIM4_Init 0 */
   /* USER CODE END TIM4_Init 0 */
 
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
   TIM_OC_InitTypeDef sConfigOC = {0};
 
@@ -283,15 +353,6 @@ static void MX_TIM4_Init(void)
   htim4.Init.Period = 65535;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
   if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
   {
     Error_Handler();
@@ -366,7 +427,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : key_Pin */
   GPIO_InitStruct.Pin = key_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(key_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : B21_Pin A21_Pin A22_Pin B02_Pin */
