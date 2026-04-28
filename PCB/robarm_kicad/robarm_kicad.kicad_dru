@@ -1,0 +1,40 @@
+(version 1)
+
+(rule "Minimum Clearance"
+   (constraint clearance (min 0.1524mm))
+   (condition "A.Type == 'track' && B.Type == 'track'")
+)
+
+(rule "Minimum Track Width"
+   (constraint track_width (min 0.1524mm))
+)
+
+(rule "Minimum Annular Ring"
+   (constraint annular_width (min 0.152mm))
+)
+
+(rule "Copper to Edge Clearance"
+   (constraint edge_clearance (min 0.3mm))
+)
+
+(rule "Copper Pour Clearance"
+   (constraint clearance (min 0.1524mm))
+   (condition "A.Type == 'zone'")
+)
+
+(rule "Via to Via Clearance"
+   (constraint hole_to_hole (min 0.3048mm))
+)
+
+(rule "Via to Track Clearance"
+   (constraint clearance (min 0.3048mm))
+   (condition "A.Type == 'via'")
+)
+
+(rule "Minimum Drill Diameter"
+   (constraint hole_size (min 0.35mm) (max 6.3mm))
+)
+
+(rule "Silkscreen to Pad Clearance"
+   (constraint silk_clearance (min 0.1524mm))
+)

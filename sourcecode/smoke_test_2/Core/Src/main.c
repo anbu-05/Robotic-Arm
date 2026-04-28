@@ -26,6 +26,7 @@ extern uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
@@ -35,14 +36,16 @@ uint8_t TxBuffer[] = "Hello World! From STM32 USB CDC Device To Virtual COM Port
 volatile uint8_t usb_rx_flag = 0;
 uint32_t usb_rx_len = 0;
 
+uint32_t AD_RES_BUFFER[6];
+
 typedef struct {
     uint8_t pwm;
     uint8_t direction;
+    uint16_t pos;
 } MotorState;
 
 MotorState motors[6]; // 0:M0A, 1:M0B, 2:M1A, 3:M1B, 4:M2A, 5:M2B
 
-// Debug: track parsing state
 char debug_id[4] = {0};
 uint8_t debug_pwm = 0;
 uint8_t debug_dir = 0;
@@ -52,10 +55,10 @@ int debug_result = 0;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
-void parse_usb_command(char* cmd);
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
 
@@ -63,44 +66,63 @@ void parse_usb_command(char* cmd);
 /* USER CODE BEGIN 0 */
 void USB_CDC_RxHandler(uint8_t* Buf, uint32_t Len)
 {
-	usb_rx_flag = 1;
-	usb_rx_len = Len;
+    usb_rx_flag = 1;
+    usb_rx_len = Len;
+}
+
+void motor_control(MotorState* m)
+{
+    // Set all IN1/IN2 pins and PWM first
+    HAL_GPIO_WritePin(A01_GPIO_Port, A01_Pin, (m[0].direction == 1 || m[0].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(B01_GPIO_Port, B01_Pin, (m[0].direction == 2 || m[0].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    TIM4->CCR4 = m[0].pwm;
+
+    HAL_GPIO_WritePin(A02_GPIO_Port, A02_Pin, (m[1].direction == 1 || m[1].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(B02_GPIO_Port, B02_Pin, (m[1].direction == 2 || m[1].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    TIM4->CCR3 = m[1].pwm;
+
+    HAL_GPIO_WritePin(A11_GPIO_Port, A11_Pin, (m[2].direction == 1 || m[2].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(B11_GPIO_Port, B11_Pin, (m[2].direction == 2 || m[2].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    TIM4->CCR2 = m[2].pwm;
+
+    HAL_GPIO_WritePin(A12_GPIO_Port, A12_Pin, (m[3].direction == 1 || m[3].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(B12_GPIO_Port, B12_Pin, (m[3].direction == 2 || m[3].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    TIM4->CCR1 = m[3].pwm;
+
+    HAL_GPIO_WritePin(A21_GPIO_Port, A21_Pin, (m[4].direction == 1 || m[4].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(B21_GPIO_Port, B21_Pin, (m[4].direction == 2 || m[4].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    TIM3->CCR2 = m[4].pwm;
+
+    HAL_GPIO_WritePin(A22_GPIO_Port, A22_Pin, (m[5].direction == 1 || m[5].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(B22_GPIO_Port, B22_Pin, (m[5].direction == 2 || m[5].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    TIM3->CCR1 = m[5].pwm;
+
+    // STBY pins last — active if either motor in the pair is running
+    HAL_GPIO_WritePin(STBY0_GPIO_Port, STBY0_Pin, (m[0].direction != 0 || m[1].direction != 0) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(STBY1_GPIO_Port, STBY1_Pin, (m[2].direction != 0 || m[3].direction != 0) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(STBY2_GPIO_Port, STBY2_Pin, (m[4].direction != 0 || m[5].direction != 0) ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
 void parse_usb_command(char* cmd)
 {
-    // Design: Parse USB command strings for motor control and safety commands.
-    // Uses %d format specifiers instead of %hhu for sscanf() because embedded systems
-    // have inconsistent support for %hhu. Parse as int then cast to uint8_t for safety.
-    // Motor ID mapping uses simple strcmp chain rather than a lookup table because
-    // there are only 6 motors and clarity is prioritized over micro-optimizations.
-    // The "x" reset command is kept separate from motor commands for explicit intent
-    // and to prevent accidental full-stop from parsing errors.
-    
-    // Remove trailing \r\n if present
     char* end = cmd + strlen(cmd) - 1;
     while (end > cmd && (*end == '\r' || *end == '\n')) *end-- = '\0';
 
     if (strcmp(cmd, "x") == 0) {
-        // Reset all motors' PWMs to 0
-        for (int i = 0; i < 6; i++) {
-            motors[i].pwm = 0;
-        }
+        memset(motors, 0, sizeof(motors));
     } else {
-        // Parse motor command: e.g., "M0A 64 1"
         char id[4];
         int pwm, dir;
         int result = sscanf(cmd, "%3s %d %d", id, &pwm, &dir);
-        
-        // Store in globals for debugging
+
         debug_result = result;
         strcpy(debug_id, id);
         debug_pwm = (uint8_t)pwm;
         debug_dir = (uint8_t)dir;
-        
+
         if (result == 3) {
             int index = -1;
-            if (strcmp(id, "M0A") == 0) index = 0;
+            if      (strcmp(id, "M0A") == 0) index = 0;
             else if (strcmp(id, "M0B") == 0) index = 1;
             else if (strcmp(id, "M1A") == 0) index = 2;
             else if (strcmp(id, "M1B") == 0) index = 3;
@@ -117,12 +139,16 @@ void parse_usb_command(char* cmd)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-    if(GPIO_Pin == key_Pin) // If The INT Source Is EXTI Line0 (A0 Pin)
+    if (GPIO_Pin == key_Pin)
     {
-    	// bug (need to fix later): for some reason the regardlesss of whether you check in the falling edge or the rising edge
-    	// the interrupt only fires when you release the button.
-    	HAL_GPIO_TogglePin(usr_led_GPIO_Port, usr_led_Pin); // Toggle The Output (LED) Pin
+        HAL_GPIO_TogglePin(usr_led_GPIO_Port, usr_led_Pin);
     }
+}
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+    for (int i = 0; i < 6; i++)
+        motors[i].pos = (uint16_t)AD_RES_BUFFER[i];
 }
 /* USER CODE END 0 */
 
@@ -152,11 +178,21 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_ADC1_Init();
   MX_TIM3_Init();
   MX_TIM4_Init();
   MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_3);
+  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_4);
+
+  HAL_ADC_Start_DMA(&hadc1, AD_RES_BUFFER, 6);
+
   HAL_GPIO_WritePin(usr_led_GPIO_Port, usr_led_Pin, 1);
   memset(motors, 0, sizeof(motors));
   /* USER CODE END 2 */
@@ -168,9 +204,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    // Apply motor control continuously for all 6 motors
+    motor_control(motors);
+
     if (usb_rx_flag)
     {
-        // Parse the received data
         char temp[APP_RX_DATA_SIZE + 1];
         memcpy(temp, UserRxBufferFS, usb_rx_len);
         temp[usb_rx_len] = '\0';
@@ -253,14 +291,14 @@ static void MX_ADC1_Init(void)
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ScanConvMode = ENABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.NbrOfConversion = 6;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
@@ -272,6 +310,51 @@ static void MX_ADC1_Init(void)
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = 2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = 3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = 4;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = 5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Rank = 6;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -300,7 +383,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 65535;
+  htim3.Init.Period = 255;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
@@ -350,7 +433,7 @@ static void MX_TIM4_Init(void)
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 0;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 65535;
+  htim4.Init.Period = 255;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
@@ -386,6 +469,22 @@ static void MX_TIM4_Init(void)
   /* USER CODE BEGIN TIM4_Init 2 */
   /* USER CODE END TIM4_Init 2 */
   HAL_TIM_MspPostInit(&htim4);
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Stream0_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
 
 }
 
