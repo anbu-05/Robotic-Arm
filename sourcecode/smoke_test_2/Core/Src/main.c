@@ -9,6 +9,7 @@
 #include "usbd_cdc_if.h"
 #include <string.h>
 #include <stdio.h>
+#include <microrl.h>
 extern uint8_t UserRxBufferFS[APP_RX_DATA_SIZE];
 /* USER CODE END Includes */
 
@@ -52,6 +53,10 @@ char debug_id[4] = {0};
 uint8_t debug_pwm = 0;
 uint8_t debug_dir = 0;
 int debug_result = 0;
+
+// create microrl object and pointer on it
+microrl_t rl;
+microrl_t * prl = &rl;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,8 +73,92 @@ static void MX_TIM4_Init(void);
 /* USER CODE BEGIN 0 */
 void USB_CDC_RxHandler(uint8_t* Buf, uint32_t Len)
 {
-    usb_rx_flag = 1;
-    usb_rx_len = Len;
+    for (uint32_t i = 0; i < Len; i++)
+    {
+        microrl_insert_char(prl, Buf[i]);
+    }
+}
+
+/*
+void parse_usb_command(char* cmd)
+{
+    char* end = cmd + strlen(cmd) - 1;
+    while (end > cmd && (*end == '\r' || *end == '\n')) *end-- = '\0';
+
+    if (strcmp(cmd, "x") == 0) {
+        memset(motors, 0, sizeof(motors));
+    } else {
+        char id[4];
+        int pwm, dir;
+        int result = sscanf(cmd, "%3s %d %d", id, &pwm, &dir);
+
+        debug_result = result;
+        strcpy(debug_id, id);
+        debug_pwm = (uint8_t)pwm;
+        debug_dir = (uint8_t)dir;
+
+        if (result == 3) {
+            int index = -1;
+            if      (strcmp(id, "M0A") == 0) index = 0;
+            else if (strcmp(id, "M0B") == 0) index = 1;
+            else if (strcmp(id, "M1A") == 0) index = 2;
+            else if (strcmp(id, "M1B") == 0) index = 3;
+            else if (strcmp(id, "M2A") == 0) index = 4;
+            else if (strcmp(id, "M2B") == 0) index = 5;
+
+            if (index != -1) {
+                motors[index].pwm = (uint8_t)pwm;
+                motors[index].direction = (uint8_t)dir;
+            }
+        }
+    }
+}
+*/
+
+char debug_argv_id[4];
+
+int execute(int argc, const char * const *argv)
+{
+    if (argc == 0) return 0;
+
+    if (strcmp(argv[0], "x") == 0)
+    {
+        memset(motors, 0, sizeof(motors));
+        return 1;
+    }
+
+    if (argc == 3)
+    {
+        char id[4];
+        strcpy(id, argv[0]);
+        strcpy(debug_argv_id, argv[0]);
+
+        int pwm = atoi(argv[1]);
+        int dir = atoi(argv[2]);
+
+        int index = -1;
+
+        if      (strcmp(id, "M0A") == 0) index = 0;
+        else if (strcmp(id, "M0B") == 0) index = 1;
+        else if (strcmp(id, "M1A") == 0) index = 2;
+        else if (strcmp(id, "M1B") == 0) index = 3;
+        else if (strcmp(id, "M2A") == 0) index = 4;
+        else if (strcmp(id, "M2B") == 0) index = 5;
+
+        if (index != -1)
+        {
+            motors[index].pwm = pwm;
+            motors[index].direction = dir;
+        }
+    }
+
+    return 0;
+}
+
+void print(const char * str)
+{
+    // CDC_Transmit_FS((uint8_t*)str, strlen(str));
+    CDC_Transmit_FS((uint8_t*)"EXEC\n", 5);
 }
 
 void motor_control(MotorState* m)
@@ -111,40 +200,6 @@ void motor_control(MotorState* m)
     HAL_GPIO_WritePin(STBY0_GPIO_Port, STBY0_Pin, (m[0].direction == 3 && m[1].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
     HAL_GPIO_WritePin(STBY1_GPIO_Port, STBY1_Pin, (m[2].direction == 3 && m[3].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
     HAL_GPIO_WritePin(STBY2_GPIO_Port, STBY2_Pin, (m[4].direction == 3 && m[5].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-}
-
-void parse_usb_command(char* cmd)
-{
-    char* end = cmd + strlen(cmd) - 1;
-    while (end > cmd && (*end == '\r' || *end == '\n')) *end-- = '\0';
-
-    if (strcmp(cmd, "x") == 0) {
-        memset(motors, 0, sizeof(motors));
-    } else {
-        char id[4];
-        int pwm, dir;
-        int result = sscanf(cmd, "%3s %d %d", id, &pwm, &dir);
-
-        debug_result = result;
-        strcpy(debug_id, id);
-        debug_pwm = (uint8_t)pwm;
-        debug_dir = (uint8_t)dir;
-
-        if (result == 3) {
-            int index = -1;
-            if      (strcmp(id, "M0A") == 0) index = 0;
-            else if (strcmp(id, "M0B") == 0) index = 1;
-            else if (strcmp(id, "M1A") == 0) index = 2;
-            else if (strcmp(id, "M1B") == 0) index = 3;
-            else if (strcmp(id, "M2A") == 0) index = 4;
-            else if (strcmp(id, "M2B") == 0) index = 5;
-
-            if (index != -1) {
-                motors[index].pwm = (uint8_t)pwm;
-                motors[index].direction = (uint8_t)dir;
-            }
-        }
-    }
 }
 
 #define ENABLE_ADC_FILTER 0   // 1 = ON, 0 = OFF
@@ -241,6 +296,8 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
+  microrl_init(prl, print);
+  microrl_set_execute_callback(prl, execute);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -282,18 +339,18 @@ int main(void)
     measure_adc_variation(2);
     motor_control(motors);
 
-    if (usb_rx_flag)
-    {
-        char temp[APP_RX_DATA_SIZE + 1];
-        memcpy(temp, UserRxBufferFS, usb_rx_len);
-        temp[usb_rx_len] = '\0';
+    // if (usb_rx_flag)
+    // {
+    //     char temp[APP_RX_DATA_SIZE + 1];
+    //     memcpy(temp, UserRxBufferFS, usb_rx_len);
+    //     temp[usb_rx_len] = '\0';
 
-        parse_usb_command(temp);
+    //     // parse_usb_command(temp);
 
-        CDC_Transmit_FS(UserRxBufferFS, usb_rx_len);
-        HAL_GPIO_TogglePin(usr_led_GPIO_Port, usr_led_Pin);
-        usb_rx_flag = 0;
-    }
+    //     CDC_Transmit_FS(UserRxBufferFS, usb_rx_len);
+    //     HAL_GPIO_TogglePin(usr_led_GPIO_Port, usr_led_Pin);
+    //     usb_rx_flag = 0;
+    // }
 //	  CDC_Transmit_FS(TxBuffer, sizeof(TxBuffer));
 //	  HAL_Delay(100);
   }
