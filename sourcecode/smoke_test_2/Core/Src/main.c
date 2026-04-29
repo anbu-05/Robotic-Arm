@@ -36,6 +36,8 @@ uint8_t TxBuffer[] = "Hello World! From STM32 USB CDC Device To Virtual COM Port
 volatile uint8_t usb_rx_flag = 0;
 uint32_t usb_rx_len = 0;
 
+// volatile uint8_t adc_flag = 0;
+
 uint32_t AD_RES_BUFFER[6];
 
 typedef struct {
@@ -72,35 +74,43 @@ void USB_CDC_RxHandler(uint8_t* Buf, uint32_t Len)
 
 void motor_control(MotorState* m)
 {
-    // Set all IN1/IN2 pins and PWM first
-    HAL_GPIO_WritePin(A01_GPIO_Port, A01_Pin, (m[0].direction == 1 || m[0].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(B01_GPIO_Port, B01_Pin, (m[0].direction == 2 || m[0].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    GPIO_PinState in1_state[4] = {GPIO_PIN_SET, GPIO_PIN_RESET, GPIO_PIN_SET, GPIO_PIN_RESET};
+    GPIO_PinState in2_state[4] = {GPIO_PIN_RESET, GPIO_PIN_SET, GPIO_PIN_SET, GPIO_PIN_RESET};
+
+    // --- Motor 0A (index 0): IN1=A01, IN2=A02, PWM=pwmA0, STBY=STBY0 ---
+    HAL_GPIO_WritePin(A01_GPIO_Port, A01_Pin, in1_state[m[0].direction]);
+    HAL_GPIO_WritePin(A02_GPIO_Port, A02_Pin, in2_state[m[0].direction]);
     TIM4->CCR4 = m[0].pwm;
 
-    HAL_GPIO_WritePin(A02_GPIO_Port, A02_Pin, (m[1].direction == 1 || m[1].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(B02_GPIO_Port, B02_Pin, (m[1].direction == 2 || m[1].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    // --- Motor 0B (index 1): IN1=B01, IN2=B02, PWM=pwmB0, STBY=STBY0 ---
+    HAL_GPIO_WritePin(B01_GPIO_Port, B01_Pin, in1_state[m[1].direction]);
+    HAL_GPIO_WritePin(B02_GPIO_Port, B02_Pin, in2_state[m[1].direction]);
     TIM4->CCR3 = m[1].pwm;
 
-    HAL_GPIO_WritePin(A11_GPIO_Port, A11_Pin, (m[2].direction == 1 || m[2].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(B11_GPIO_Port, B11_Pin, (m[2].direction == 2 || m[2].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    // --- Motor 1A (index 2): IN1=A11, IN2=A12, PWM=pwmA1, STBY=STBY1 ---
+    HAL_GPIO_WritePin(A11_GPIO_Port, A11_Pin, in1_state[m[2].direction]);
+    HAL_GPIO_WritePin(A12_GPIO_Port, A12_Pin, in2_state[m[2].direction]);
     TIM4->CCR2 = m[2].pwm;
 
-    HAL_GPIO_WritePin(A12_GPIO_Port, A12_Pin, (m[3].direction == 1 || m[3].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(B12_GPIO_Port, B12_Pin, (m[3].direction == 2 || m[3].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    // --- Motor 1B (index 3): IN1=B11, IN2=B12, PWM=pwmB1, STBY=STBY1 ---
+    HAL_GPIO_WritePin(B11_GPIO_Port, B11_Pin, in1_state[m[3].direction]);
+    HAL_GPIO_WritePin(B12_GPIO_Port, B12_Pin, in2_state[m[3].direction]);
     TIM4->CCR1 = m[3].pwm;
 
-    HAL_GPIO_WritePin(A21_GPIO_Port, A21_Pin, (m[4].direction == 1 || m[4].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(B21_GPIO_Port, B21_Pin, (m[4].direction == 2 || m[4].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    // --- Motor 2A (index 4): IN1=A21, IN2=A22, PWM=pwmA2, STBY=STBY2 ---
+    HAL_GPIO_WritePin(A21_GPIO_Port, A21_Pin, in1_state[m[4].direction]);
+    HAL_GPIO_WritePin(A22_GPIO_Port, A22_Pin, in2_state[m[4].direction]);
     TIM3->CCR2 = m[4].pwm;
 
-    HAL_GPIO_WritePin(A22_GPIO_Port, A22_Pin, (m[5].direction == 1 || m[5].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(B22_GPIO_Port, B22_Pin, (m[5].direction == 2 || m[5].direction == 3) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    // --- Motor 2B (index 5): IN1=B21, IN2=B22, PWM=pwmB2, STBY=STBY2 ---
+    HAL_GPIO_WritePin(B21_GPIO_Port, B21_Pin, in1_state[m[5].direction]);
+    HAL_GPIO_WritePin(B22_GPIO_Port, B22_Pin, in2_state[m[5].direction]);
     TIM3->CCR1 = m[5].pwm;
 
-    // STBY pins last — active if either motor in the pair is running
-    HAL_GPIO_WritePin(STBY0_GPIO_Port, STBY0_Pin, (m[0].direction != 0 || m[1].direction != 0) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(STBY1_GPIO_Port, STBY1_Pin, (m[2].direction != 0 || m[3].direction != 0) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(STBY2_GPIO_Port, STBY2_Pin, (m[4].direction != 0 || m[5].direction != 0) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    // --- STBY: LOW only if BOTH motors in the pair are dir 3 ---
+    HAL_GPIO_WritePin(STBY0_GPIO_Port, STBY0_Pin, (m[0].direction == 3 && m[1].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+    HAL_GPIO_WritePin(STBY1_GPIO_Port, STBY1_Pin, (m[2].direction == 3 && m[3].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+    HAL_GPIO_WritePin(STBY2_GPIO_Port, STBY2_Pin, (m[4].direction == 3 && m[5].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
 }
 
 void parse_usb_command(char* cmd)
@@ -137,6 +147,70 @@ void parse_usb_command(char* cmd)
     }
 }
 
+#define ENABLE_ADC_FILTER 0   // 1 = ON, 0 = OFF
+#define SPIKE_THRESHOLD 30
+
+uint16_t adc_filtered[6] = {0};
+
+void read_ADC()
+{
+    for (int i = 0; i < 6; i++)
+    {
+        uint16_t raw = (uint16_t)AD_RES_BUFFER[i];
+
+#if ENABLE_ADC_FILTER
+
+        uint16_t prev = adc_filtered[i];
+
+        // Spike rejection
+        if (raw > prev + SPIKE_THRESHOLD || raw + SPIKE_THRESHOLD < prev)
+        {
+            raw = prev;
+        }
+
+        // Exponential smoothing
+        adc_filtered[i] = (adc_filtered[i] * 3 + raw) / 4;
+
+        motors[i].pos = adc_filtered[i];
+
+#else
+
+        // No filtering
+        motors[i].pos = raw;
+
+#endif
+    }
+}
+
+#define VAR_SAMPLES 8
+
+uint16_t adc_prev[6] = {0};
+uint32_t adc_diff_sum[6] = {0};
+uint16_t adc_variation[6] = {0};
+uint16_t var_count[6] = {0};   // per-channel counter
+
+void measure_adc_variation(uint8_t idx)
+{
+    uint16_t curr = (uint16_t)AD_RES_BUFFER[idx];
+    uint16_t prev = adc_prev[idx];
+
+    uint16_t diff;
+    if (curr > prev) diff = curr - prev;
+    else diff = prev - curr;
+
+    adc_diff_sum[idx] += diff;
+    adc_prev[idx] = curr;
+
+    var_count[idx]++;
+
+    if (var_count[idx] >= VAR_SAMPLES)
+    {
+        adc_variation[idx] = adc_diff_sum[idx] / VAR_SAMPLES;
+        adc_diff_sum[idx] = 0;
+        var_count[idx] = 0;
+    }
+}
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
     if (GPIO_Pin == key_Pin)
@@ -145,11 +219,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     }
 }
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
-{
-    for (int i = 0; i < 6; i++)
-        motors[i].pos = (uint16_t)AD_RES_BUFFER[i];
-}
+// void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+// {
+//     adc_flag = 1;
+// }
 /* USER CODE END 0 */
 
 /**
@@ -205,6 +278,8 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     // Apply motor control continuously for all 6 motors
+    read_ADC();
+    measure_adc_variation(2);
     motor_control(motors);
 
     if (usb_rx_flag)
@@ -309,7 +384,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -385,7 +460,7 @@ static void MX_TIM3_Init(void)
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 255;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
   {
     Error_Handler();
@@ -435,7 +510,7 @@ static void MX_TIM4_Init(void)
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim4.Init.Period = 255;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_PWM_Init(&htim4) != HAL_OK)
   {
     Error_Handler();
@@ -481,11 +556,6 @@ static void MX_DMA_Init(void)
   /* DMA controller clock enable */
   __HAL_RCC_DMA2_CLK_ENABLE();
 
-  /* DMA interrupt init */
-  /* DMA2_Stream0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
-
 }
 
 /**
@@ -509,12 +579,12 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, usr_led_Pin|A01_Pin|A02_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, B21_Pin|A21_Pin|A22_Pin|B02_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, B21_Pin|A22_Pin|A21_Pin|B01_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, B12_Pin|B11_Pin|A12_Pin|A11_Pin
+  HAL_GPIO_WritePin(GPIOB, B12_Pin|B11_Pin|A11_Pin|A12_Pin
                           |STBY0_Pin|STBY1_Pin|STBY2_Pin|B22_Pin
-                          |B01_Pin, GPIO_PIN_RESET);
+                          |B02_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : usr_led_Pin A01_Pin A02_Pin */
   GPIO_InitStruct.Pin = usr_led_Pin|A01_Pin|A02_Pin;
@@ -529,19 +599,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(key_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : B21_Pin A21_Pin A22_Pin B02_Pin */
-  GPIO_InitStruct.Pin = B21_Pin|A21_Pin|A22_Pin|B02_Pin;
+  /*Configure GPIO pins : B21_Pin A22_Pin A21_Pin B01_Pin */
+  GPIO_InitStruct.Pin = B21_Pin|A22_Pin|A21_Pin|B01_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : B12_Pin B11_Pin A12_Pin A11_Pin
+  /*Configure GPIO pins : B12_Pin B11_Pin A11_Pin A12_Pin
                            STBY0_Pin STBY1_Pin STBY2_Pin B22_Pin
-                           B01_Pin */
-  GPIO_InitStruct.Pin = B12_Pin|B11_Pin|A12_Pin|A11_Pin
+                           B02_Pin */
+  GPIO_InitStruct.Pin = B12_Pin|B11_Pin|A11_Pin|A12_Pin
                           |STBY0_Pin|STBY1_Pin|STBY2_Pin|B22_Pin
-                          |B01_Pin;
+                          |B02_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
