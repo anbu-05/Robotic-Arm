@@ -49,11 +49,6 @@ typedef struct {
 
 MotorState motors[6]; // 0:M0A, 1:M0B, 2:M1A, 3:M1B, 4:M2A, 5:M2B
 
-char debug_id[4] = {0};
-uint8_t debug_pwm = 0;
-uint8_t debug_dir = 0;
-int debug_result = 0;
-
 // create microrl object and pointer on it
 microrl_t rl;
 microrl_t * prl = &rl;
@@ -71,96 +66,6 @@ static void MX_TIM4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void USB_CDC_RxHandler(uint8_t* Buf, uint32_t Len)
-{
-    for (uint32_t i = 0; i < Len; i++)
-    {
-        microrl_insert_char(prl, Buf[i]);
-    }
-}
-
-/*
-void parse_usb_command(char* cmd)
-{
-    char* end = cmd + strlen(cmd) - 1;
-    while (end > cmd && (*end == '\r' || *end == '\n')) *end-- = '\0';
-
-    if (strcmp(cmd, "x") == 0) {
-        memset(motors, 0, sizeof(motors));
-    } else {
-        char id[4];
-        int pwm, dir;
-        int result = sscanf(cmd, "%3s %d %d", id, &pwm, &dir);
-
-        debug_result = result;
-        strcpy(debug_id, id);
-        debug_pwm = (uint8_t)pwm;
-        debug_dir = (uint8_t)dir;
-
-        if (result == 3) {
-            int index = -1;
-            if      (strcmp(id, "M0A") == 0) index = 0;
-            else if (strcmp(id, "M0B") == 0) index = 1;
-            else if (strcmp(id, "M1A") == 0) index = 2;
-            else if (strcmp(id, "M1B") == 0) index = 3;
-            else if (strcmp(id, "M2A") == 0) index = 4;
-            else if (strcmp(id, "M2B") == 0) index = 5;
-
-            if (index != -1) {
-                motors[index].pwm = (uint8_t)pwm;
-                motors[index].direction = (uint8_t)dir;
-            }
-        }
-    }
-}
-*/
-
-char debug_argv_id[4];
-
-int execute(int argc, const char * const *argv)
-{
-    if (argc == 0) return 0;
-
-    if (strcmp(argv[0], "x") == 0)
-    {
-        memset(motors, 0, sizeof(motors));
-        return 1;
-    }
-
-    if (argc == 3)
-    {
-        char id[4];
-        strcpy(id, argv[0]);
-        strcpy(debug_argv_id, argv[0]);
-
-        int pwm = atoi(argv[1]);
-        int dir = atoi(argv[2]);
-
-        int index = -1;
-
-        if      (strcmp(id, "M0A") == 0) index = 0;
-        else if (strcmp(id, "M0B") == 0) index = 1;
-        else if (strcmp(id, "M1A") == 0) index = 2;
-        else if (strcmp(id, "M1B") == 0) index = 3;
-        else if (strcmp(id, "M2A") == 0) index = 4;
-        else if (strcmp(id, "M2B") == 0) index = 5;
-
-        if (index != -1)
-        {
-            motors[index].pwm = pwm;
-            motors[index].direction = dir;
-        }
-    }
-
-    return 0;
-}
-
-void print(const char * str)
-{
-    // CDC_Transmit_FS((uint8_t*)str, strlen(str));
-    CDC_Transmit_FS((uint8_t*)"EXEC\n", 5);
-}
-
 void motor_control(MotorState* m)
 {
     GPIO_PinState in1_state[4] = {GPIO_PIN_SET, GPIO_PIN_RESET, GPIO_PIN_SET, GPIO_PIN_RESET};
@@ -202,10 +107,24 @@ void motor_control(MotorState* m)
     HAL_GPIO_WritePin(STBY2_GPIO_Port, STBY2_Pin, (m[4].direction == 3 && m[5].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
 }
 
-#define ENABLE_ADC_FILTER 0   // 1 = ON, 0 = OFF
-#define SPIKE_THRESHOLD 30
+uint8_t enable_adc_filter = 1;
+
+// Spike rejection
+uint16_t spike_threshold = 30;
+
+// Smoothing strength (1–255)
+// higher = smoother but slower
+uint8_t smooth_k = 4;   // replaces hardcoded 3/4
+
+// Deadband (kills small noise completely)
+uint16_t deadband = 5;
+
+// Optional max step (rate limiter) (sets the max speed of the motor basically)
+uint16_t max_step = 20;
+uint8_t enable_rate_limit = 0;
 
 uint16_t adc_filtered[6] = {0};
+uint8_t adc_initialized[6] = {0};
 
 void read_ADC()
 {
@@ -213,58 +132,131 @@ void read_ADC()
     {
         uint16_t raw = (uint16_t)AD_RES_BUFFER[i];
 
-#if ENABLE_ADC_FILTER
-
-        uint16_t prev = adc_filtered[i];
-
-        // Spike rejection
-        if (raw > prev + SPIKE_THRESHOLD || raw + SPIKE_THRESHOLD < prev)
+        if (enable_adc_filter)
         {
-            raw = prev;
+            if (!adc_initialized[i])
+            {
+                adc_filtered[i] = raw;
+                adc_initialized[i] = raw;
+                motors[i].pos = raw;
+                continue;
+            }
+
+            uint16_t prev = adc_filtered[i];
+
+            // ---- 1. Spike rejection ----
+            if (raw > prev + spike_threshold || raw + spike_threshold < prev)
+            {
+                raw = prev;
+            }
+
+            // ---- 2. Exponential smoothing ----
+            // new = (k*prev + raw) / (k+1)
+            uint16_t filtered = (prev * smooth_k + raw) / (smooth_k + 1);
+
+            // ---- 3. Deadband (this is what reduces "range to ~0") ----
+            if (filtered > prev)
+            {
+                if (filtered - prev < deadband)
+                    filtered = prev;
+            }
+            else
+            {
+                if (prev - filtered < deadband)
+                    filtered = prev;
+            }
+
+            // ---- 4. Optional rate limiter ----
+            if (enable_rate_limit)
+            {
+                if (filtered > prev + max_step)
+                    filtered = prev + max_step;
+                else if (filtered + max_step < prev)
+                    filtered = prev - max_step;
+            }
+
+            adc_filtered[i] = filtered;
+            motors[i].pos = filtered;
+        }
+        else
+        {
+            motors[i].pos = raw;
+        }
+    }
+}
+
+/*--------------------debugging--------------------*/
+    // #define VAR_SAMPLES 8
+    int var_samples = 64;
+    int var_to_check = 0;
+
+
+    uint16_t adc_prev[6] = {0};
+    uint32_t adc_diff_sum[6] = {0};
+    uint16_t adc_variation[6] = {0};
+    uint16_t var_count[6] = {0};   // per-channel counter
+
+    void measure_adc_variation(uint8_t idx)
+    {
+        uint16_t curr = (uint16_t)AD_RES_BUFFER[idx];
+        uint16_t prev = adc_prev[idx];
+
+        uint16_t diff;
+        if (curr > prev) diff = curr - prev;
+        else diff = prev - curr;
+
+        adc_diff_sum[idx] += diff;
+        adc_prev[idx] = curr;
+
+        var_count[idx]++;
+
+        if (var_count[idx] >= var_samples)
+        {
+            adc_variation[idx] = adc_diff_sum[idx] / var_samples;
+            adc_diff_sum[idx] = 0;
+            var_count[idx] = 0;
+        }
+    }
+
+    // ----- RANGE CONFIG -----
+    int range_samples = 64;
+    int range_to_check = 0;
+
+    // ----- RANGE STATE -----
+    uint16_t adc_range_min[6] = {65535,65535,65535,65535,65535,65535};
+    uint16_t adc_range_max[6] = {0};
+    uint16_t adc_range[6] = {0};
+    uint16_t range_count[6] = {0};
+
+    // ----- FUNCTION -----
+    void measure_adc_range(uint8_t idx)
+    {
+        uint16_t curr = (uint16_t)AD_RES_BUFFER[idx];
+
+        // track min
+        if (curr < adc_range_min[idx])
+        {
+            adc_range_min[idx] = curr;
         }
 
-        // Exponential smoothing
-        adc_filtered[i] = (adc_filtered[i] * 3 + raw) / 4;
+        // track max
+        if (curr > adc_range_max[idx])
+        {
+            adc_range_max[idx] = curr;
+        }
 
-        motors[i].pos = adc_filtered[i];
+        range_count[idx]++;
 
-#else
+        if (range_count[idx] >= range_samples)
+        {
+            adc_range[idx] = adc_range_max[idx] - adc_range_min[idx];
 
-        // No filtering
-        motors[i].pos = raw;
-
-#endif
+            // reset window
+            adc_range_min[idx] = 65535;
+            adc_range_max[idx] = 0;
+            range_count[idx] = 0;
+        }
     }
-}
-
-#define VAR_SAMPLES 8
-
-uint16_t adc_prev[6] = {0};
-uint32_t adc_diff_sum[6] = {0};
-uint16_t adc_variation[6] = {0};
-uint16_t var_count[6] = {0};   // per-channel counter
-
-void measure_adc_variation(uint8_t idx)
-{
-    uint16_t curr = (uint16_t)AD_RES_BUFFER[idx];
-    uint16_t prev = adc_prev[idx];
-
-    uint16_t diff;
-    if (curr > prev) diff = curr - prev;
-    else diff = prev - curr;
-
-    adc_diff_sum[idx] += diff;
-    adc_prev[idx] = curr;
-
-    var_count[idx]++;
-
-    if (var_count[idx] >= VAR_SAMPLES)
-    {
-        adc_variation[idx] = adc_diff_sum[idx] / VAR_SAMPLES;
-        adc_diff_sum[idx] = 0;
-        var_count[idx] = 0;
-    }
-}
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
@@ -278,12 +270,197 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 // {
 //     adc_flag = 1;
 // }
+
+/*----------------microrl----------------*/
+
+    void USB_CDC_RxHandler(uint8_t* Buf, uint32_t Len)
+    {
+        for (uint32_t i = 0; i < Len; i++)
+        {
+            microrl_insert_char(prl, Buf[i]);
+        }
+    }
+
+    char debug_argv_id[4];
+
+    int get_motor_index(const char* id)
+    {
+        if      (strcmp(id, "M0A") == 0) return 0;
+        else if (strcmp(id, "M0B") == 0) return 1;
+        else if (strcmp(id, "M1A") == 0) return 2;
+        else if (strcmp(id, "M1B") == 0) return 3;
+        else if (strcmp(id, "M2A") == 0) return 4;
+        else if (strcmp(id, "M2B") == 0) return 5;
+
+        return -1;
+    }
+
+    void print(const char * str)
+    {
+        CDC_Transmit_FS((uint8_t*)str, strlen(str));
+        // CDC_Transmit_FS((uint8_t*)"EXEC\n", 5);
+    }
+
+    volatile uint8_t sigint_flag = 0;
+
+    void sigint(void)
+    {
+        memset(motors, 0, sizeof(motors));
+        sigint_flag = 1;
+    }
+
+    typedef struct {
+    const char* name;
+    int* ptr;
+    } Param;
+
+    Param params[] = { // (cast to int* for uniformity)
+        {"spike_threshold", (int*)&spike_threshold},
+        {"adc_filter", (int*)&enable_adc_filter},
+        {"var_samples", (int*)&var_samples},
+        {"var_to_check", (int*)&var_to_check},
+        {"range_samples", (int*)&range_samples},
+        {"range_to_check", (int*)&range_to_check},
+        {"smooth_k", (int*)&smooth_k},  
+        {"deadband", (int*)&deadband},
+        {"max_step", (int*)&max_step},
+        {"enable_rate_limit", (int*)&enable_rate_limit} 
+    };
+
+    #define PARAM_COUNT (sizeof(params) / sizeof(params[0]))
+
+    int execute(int argc, const char * const *argv)
+    {
+        if (argc == 0) return 0;
+
+        // ---------------- setmotor ----------------
+        if (strcmp(argv[0], "setmotor") == 0)
+        {
+            if (argc != 4)
+            {
+                print("Usage: setmotor <motor> <pwm> <dir>\n");
+                return 0;
+            }
+
+            int index = get_motor_index(argv[1]);
+            if (index == -1)
+            {
+                print("Invalid motor\n");
+                return 0;
+            }
+
+            int pwm = atoi(argv[2]);
+            int dir = atoi(argv[3]);
+
+            motors[index].pwm = pwm;
+            motors[index].direction = dir;
+
+            print("OK\n");
+            return 1;
+        }
+
+        // ---------------- stop ----------------
+        if (strcmp(argv[0], "stop") == 0)
+        {
+            if (argc == 1)
+            {
+                memset(motors, 0, sizeof(motors));
+                print("All motors stopped\n");
+                return 1;
+            }
+
+            if (argc == 2)
+            {
+                int index = get_motor_index(argv[1]);
+                if (index == -1)
+                {
+                    print("Invalid motor\n");
+                    return 0;
+                }
+
+                motors[index].pwm = 0;
+                motors[index].direction = 0;
+
+                print("Motor stopped\n");
+                return 1;
+            }
+
+            print("Usage: stop [motor]\n");
+            return 0;
+        }
+
+        // ---------------- setparam ----------------
+        if (strcmp(argv[0], "setparam") == 0)
+        {
+            if (argc != 3)
+            {
+                print("Usage: setparam <param> <value>\n");
+                return 0;
+            }
+
+            int value = atoi(argv[2]);
+
+            for (int i = 0; i < PARAM_COUNT; i++)
+            {
+                if (strcmp(argv[1], params[i].name) == 0)
+                {
+                    *(params[i].ptr) = value;
+                    print("OK\n");
+                    return 1;
+                }
+            }
+
+            print("Unknown parameter\n");
+            return 0;
+        }
+
+        // ---------------- getparam ----------------
+        if (strcmp(argv[0], "getparam") == 0)
+        {
+            if (argc != 2)
+            {
+                print("Usage: getparam <param>\n");
+                return 0;
+            }
+
+            char buf[32];
+
+            for (int i = 0; i < PARAM_COUNT; i++)
+            {
+                if (strcmp(argv[1], params[i].name) == 0)
+                {
+                    sprintf(buf, "%d\n", *(params[i].ptr));
+                    print(buf);
+                    return 1;
+                }
+            }
+
+            print("Unknown parameter\n");
+            return 0;
+        }
+        // ---------------- listparams ----------------
+        if (strcmp(argv[0], "listparams") == 0)
+        {
+            for (int i = 0; i < PARAM_COUNT; i++)
+            {
+                print(params[i].name);
+                print("\n");
+            }
+            return 1;
+        }
+
+        // ---------------- fallback ----------------
+        print("Unknown command\n");
+        return 0;
+    }
+
 /* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
   * @retval int
   */
+
 int main(void)
 {
 
@@ -298,6 +475,7 @@ int main(void)
   /* USER CODE BEGIN Init */
   microrl_init(prl, print);
   microrl_set_execute_callback(prl, execute);
+  microrl_set_sigint_callback(prl, sigint);
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -336,23 +514,15 @@ int main(void)
     /* USER CODE BEGIN 3 */
     // Apply motor control continuously for all 6 motors
     read_ADC();
-    measure_adc_variation(2);
+    // measure_adc_variation(var_to_check);
+    measure_adc_range(range_to_check);
     motor_control(motors);
 
-    // if (usb_rx_flag)
-    // {
-    //     char temp[APP_RX_DATA_SIZE + 1];
-    //     memcpy(temp, UserRxBufferFS, usb_rx_len);
-    //     temp[usb_rx_len] = '\0';
-
-    //     // parse_usb_command(temp);
-
-    //     CDC_Transmit_FS(UserRxBufferFS, usb_rx_len);
-    //     HAL_GPIO_TogglePin(usr_led_GPIO_Port, usr_led_Pin);
-    //     usb_rx_flag = 0;
-    // }
-//	  CDC_Transmit_FS(TxBuffer, sizeof(TxBuffer));
-//	  HAL_Delay(100);
+    if (sigint_flag)
+    {
+        CDC_Transmit_FS((uint8_t*)"SIGINT\n", 7);
+        sigint_flag = 0;
+    }
   }
   /* USER CODE END 3 */
 }
