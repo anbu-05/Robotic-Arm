@@ -1,18 +1,22 @@
+# KNOWN BUGS:
+1. listparam doesnt really print anything. when using microsoft serial monitor.
+2. serious bug: different parameters are getting affected sometimes. like for example i set spike threshold, smoothk gets set to zero. there's some instability with the USB-CDC to microrl
+
 # CLI Commands
 
-* **setmotor <motor> <pwm> <dir>**
+* **setmotor \<motor> \<pwm> \<dir>**
   Set motor PWM and direction
 
 * **stop**
   Stop all motors
 
-* **stop <motor>**
+* **stop \<motor>**
   Stop specific motor
 
-* **setparam <param> <value>**
+* **setparam \<param> \<value>**
   Update runtime parameters
 
-* **getparam <param>**
+* **getparam \<param>**
   Read parameter value
 
 * **listparams**
