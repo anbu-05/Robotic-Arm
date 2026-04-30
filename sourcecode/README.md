@@ -2,7 +2,7 @@
 
 1. ~~listparam doesnt really print anything. when using microsoft serial monitor.~~
 2. ~~serious bug: different parameters are getting affected sometimes. like for example i set spike threshold, smoothk gets set to zero. there's some instability with the USB-CDC to microrl~~
-3. ~~the filtered values are staying at 0 even though raw values are updating.~~ spike rejection is causing filtered values to stay at 0. spike rejection is necessary tho -if you look at the filtered values and think about it.
+3. ~~the filtered values are staying at 0 even though raw values are updating.~~ ~~spike rejection is causing filtered values to stay at 0. spike rejection is necessary tho -if you look at the filtered values and think about it.~~
 
 # CLI Commands
 
@@ -100,6 +100,9 @@ Outputs:
   If exceeded, value is clamped to previous.
   Too low → blocks real motion
   Too high → spikes pass through
+
+* **spike_start_delay**
+  amount of time spike rejection is ignored -this fixes the problem where the filtering cannot even start because of spike rejection.
 
 * **smooth_k**
   Exponential smoothing strength.

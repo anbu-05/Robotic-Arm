@@ -103,6 +103,18 @@ static void MX_TIM4_Init(void);
         HAL_GPIO_WritePin(STBY2_GPIO_Port, STBY2_Pin, (m[4].direction == 3 && m[5].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
     }
 
+    // circular buffer per channel
+    uint16_t median_buf[6][3] = {0};
+    uint8_t median_idx[6] = {0};
+
+    uint16_t median3(uint16_t a, uint16_t b, uint16_t c)
+    {
+        if (a > b) { uint16_t t = a; a = b; b = t; }
+        if (b > c) { uint16_t t = b; b = c; c = t; }
+        if (a > b) { uint16_t t = a; a = b; b = t; }
+        return b;  // middle value
+    }
+
     uint32_t AD_RES_BUFFER[6] = {0};
 
     uint8_t enable_adc_filter = 1;
@@ -124,10 +136,13 @@ static void MX_TIM4_Init(void);
     uint16_t adc_filtered[6] = {0};
     uint8_t adc_initialized[6] = {0};
 
-    uint16_t debug_raw = 0;
-    uint16_t debug_prev = 0;
+    // uint16_t debug_raw = 0;
+    // uint16_t debug_prev = 0;
     // uint16_t debug_AD_RES_BUFFER = 0;
     // int debug_count  = 0;
+
+    uint16_t spike_start_delay = 200;  // tune this
+    uint16_t adc_init_count[6] = {0};
 
 
     void read_ADC()
@@ -135,27 +150,31 @@ static void MX_TIM4_Init(void);
         for (int i = 0; i < 6; i++)
         {
             uint16_t raw = (uint16_t)AD_RES_BUFFER[i];
-            debug_raw = raw;
+            // debug_raw = raw;
 
             uint16_t prev = adc_filtered[i];
-            debug_prev = prev;
-
-            if (!adc_initialized[i])
-            {
-                adc_filtered[i] = raw;
-                motors[i].pos = raw;
-                adc_initialized[i] = 1;
-                continue;
-            }
+            // debug_prev = prev;
 
             if (enable_adc_filter)
             {
-                // // ---- 1. Spike rejection ---- //removed temporarily because it's causing issues during initialization where it doesnt let the filtered value go above 0
-                // if (raw > prev + spike_threshold || raw + spike_threshold < prev)
-                // {
-                //     raw = prev;
-                //     // debug_count++;
-                // }
+                // ---- 0. median filtering ----
+                // feed the buffer
+                median_buf[i][median_idx[i]] = raw;
+                median_idx[i] = (median_idx[i] + 1) % 3;
+
+                // use median as raw from here on
+                raw = median3(median_buf[i][0], median_buf[i][1], median_buf[i][2]);
+
+                // ---- 1. Spike rejection (delayed start) ----
+                if (adc_init_count[i] < spike_start_delay)
+                {
+                    adc_init_count[i]++;
+                }
+                else
+                {
+                    if (raw > prev + spike_threshold || raw + spike_threshold < prev)
+                        raw = prev;
+                }
 
                 // ---- 2. Deadband (this is what reduces "range to ~0") ----
                 if (raw > prev)
@@ -346,7 +365,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
     Param params[] = {
         {"spike_threshold", &spike_threshold, PARAM_U16},
-        {"adc_filter", &enable_adc_filter, PARAM_U8},
+        {"enable_adc_filter", &enable_adc_filter, PARAM_U8},
         {"var_samples", &var_samples, PARAM_INT},
         {"var_to_check", &var_to_check, PARAM_INT},
         {"range_samples", &range_samples, PARAM_INT},
@@ -354,7 +373,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         {"smooth_k", &smooth_k, PARAM_U8},
         {"deadband", &deadband, PARAM_U16},
         {"max_step", &max_step, PARAM_U16},
-        {"enable_rate_limit", &enable_rate_limit, PARAM_U8}
+        {"enable_rate_limit", &enable_rate_limit, PARAM_U8},
+        {"spike_start_delay", &spike_start_delay, PARAM_U16}
     };
 
     #define PARAM_COUNT (sizeof(params) / sizeof(params[0]))
