@@ -7,6 +7,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "usbd_cdc_if.h"
+#include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 #include <microrl.h>
@@ -33,22 +34,6 @@ TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 /* USER CODE BEGIN PV */
-uint8_t TxBuffer[] = "Hello World! From STM32 USB CDC Device To Virtual COM Port\r\n";
-volatile uint8_t usb_rx_flag = 0;
-uint32_t usb_rx_len = 0;
-
-// volatile uint8_t adc_flag = 0;
-
-uint32_t AD_RES_BUFFER[6];
-
-typedef struct {
-    uint8_t pwm;
-    uint8_t direction;
-    uint16_t pos;
-} MotorState;
-
-MotorState motors[6]; // 0:M0A, 1:M0B, 2:M1A, 3:M1B, 4:M2A, 5:M2B
-
 // create microrl object and pointer on it
 microrl_t rl;
 microrl_t * prl = &rl;
@@ -66,126 +51,149 @@ static void MX_TIM4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void motor_control(MotorState* m)
-{
-    GPIO_PinState in1_state[4] = {GPIO_PIN_SET, GPIO_PIN_RESET, GPIO_PIN_SET, GPIO_PIN_RESET};
-    GPIO_PinState in2_state[4] = {GPIO_PIN_RESET, GPIO_PIN_SET, GPIO_PIN_SET, GPIO_PIN_RESET};
 
-    // --- Motor 0A (index 0): IN1=A01, IN2=A02, PWM=pwmA0, STBY=STBY0 ---
-    HAL_GPIO_WritePin(A01_GPIO_Port, A01_Pin, in1_state[m[0].direction]);
-    HAL_GPIO_WritePin(A02_GPIO_Port, A02_Pin, in2_state[m[0].direction]);
-    TIM4->CCR4 = m[0].pwm;
+/* --------------- motor control and encoder input ---------------*/
 
-    // --- Motor 0B (index 1): IN1=B01, IN2=B02, PWM=pwmB0, STBY=STBY0 ---
-    HAL_GPIO_WritePin(B01_GPIO_Port, B01_Pin, in1_state[m[1].direction]);
-    HAL_GPIO_WritePin(B02_GPIO_Port, B02_Pin, in2_state[m[1].direction]);
-    TIM4->CCR3 = m[1].pwm;
+    typedef struct {
+        uint8_t pwm;
+        uint8_t direction;
+        uint16_t pos;
+    } MotorState;
 
-    // --- Motor 1A (index 2): IN1=A11, IN2=A12, PWM=pwmA1, STBY=STBY1 ---
-    HAL_GPIO_WritePin(A11_GPIO_Port, A11_Pin, in1_state[m[2].direction]);
-    HAL_GPIO_WritePin(A12_GPIO_Port, A12_Pin, in2_state[m[2].direction]);
-    TIM4->CCR2 = m[2].pwm;
+    MotorState motors[6]; // 0:M0A, 1:M0B, 2:M1A, 3:M1B, 4:M2A, 5:M2B
 
-    // --- Motor 1B (index 3): IN1=B11, IN2=B12, PWM=pwmB1, STBY=STBY1 ---
-    HAL_GPIO_WritePin(B11_GPIO_Port, B11_Pin, in1_state[m[3].direction]);
-    HAL_GPIO_WritePin(B12_GPIO_Port, B12_Pin, in2_state[m[3].direction]);
-    TIM4->CCR1 = m[3].pwm;
-
-    // --- Motor 2A (index 4): IN1=A21, IN2=A22, PWM=pwmA2, STBY=STBY2 ---
-    HAL_GPIO_WritePin(A21_GPIO_Port, A21_Pin, in1_state[m[4].direction]);
-    HAL_GPIO_WritePin(A22_GPIO_Port, A22_Pin, in2_state[m[4].direction]);
-    TIM3->CCR2 = m[4].pwm;
-
-    // --- Motor 2B (index 5): IN1=B21, IN2=B22, PWM=pwmB2, STBY=STBY2 ---
-    HAL_GPIO_WritePin(B21_GPIO_Port, B21_Pin, in1_state[m[5].direction]);
-    HAL_GPIO_WritePin(B22_GPIO_Port, B22_Pin, in2_state[m[5].direction]);
-    TIM3->CCR1 = m[5].pwm;
-
-    // --- STBY: LOW only if BOTH motors in the pair are dir 3 ---
-    HAL_GPIO_WritePin(STBY0_GPIO_Port, STBY0_Pin, (m[0].direction == 3 && m[1].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-    HAL_GPIO_WritePin(STBY1_GPIO_Port, STBY1_Pin, (m[2].direction == 3 && m[3].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-    HAL_GPIO_WritePin(STBY2_GPIO_Port, STBY2_Pin, (m[4].direction == 3 && m[5].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-}
-
-uint8_t enable_adc_filter = 1;
-
-// Spike rejection
-uint16_t spike_threshold = 30;
-
-// Smoothing strength (1–255)
-// higher = smoother but slower
-uint8_t smooth_k = 4;   // replaces hardcoded 3/4
-
-// Deadband (kills small noise completely)
-uint16_t deadband = 5;
-
-// Optional max step (rate limiter) (sets the max speed of the motor basically)
-uint16_t max_step = 20;
-uint8_t enable_rate_limit = 0;
-
-uint16_t adc_filtered[6] = {0};
-uint8_t adc_initialized[6] = {0};
-
-void read_ADC()
-{
-    for (int i = 0; i < 6; i++)
+    void motor_control(MotorState* m)
     {
-        uint16_t raw = (uint16_t)AD_RES_BUFFER[i];
+        GPIO_PinState in1_state[4] = {GPIO_PIN_SET, GPIO_PIN_RESET, GPIO_PIN_SET, GPIO_PIN_RESET};
+        GPIO_PinState in2_state[4] = {GPIO_PIN_RESET, GPIO_PIN_SET, GPIO_PIN_SET, GPIO_PIN_RESET};
 
-        if (enable_adc_filter)
+        // --- Motor 0A (index 0): IN1=A01, IN2=A02, PWM=pwmA0, STBY=STBY0 ---
+        HAL_GPIO_WritePin(A01_GPIO_Port, A01_Pin, in1_state[m[0].direction]);
+        HAL_GPIO_WritePin(A02_GPIO_Port, A02_Pin, in2_state[m[0].direction]);
+        TIM4->CCR4 = m[0].pwm;
+
+        // --- Motor 0B (index 1): IN1=B01, IN2=B02, PWM=pwmB0, STBY=STBY0 ---
+        HAL_GPIO_WritePin(B01_GPIO_Port, B01_Pin, in1_state[m[1].direction]);
+        HAL_GPIO_WritePin(B02_GPIO_Port, B02_Pin, in2_state[m[1].direction]);
+        TIM4->CCR3 = m[1].pwm;
+
+        // --- Motor 1A (index 2): IN1=A11, IN2=A12, PWM=pwmA1, STBY=STBY1 ---
+        HAL_GPIO_WritePin(A11_GPIO_Port, A11_Pin, in1_state[m[2].direction]);
+        HAL_GPIO_WritePin(A12_GPIO_Port, A12_Pin, in2_state[m[2].direction]);
+        TIM4->CCR2 = m[2].pwm;
+
+        // --- Motor 1B (index 3): IN1=B11, IN2=B12, PWM=pwmB1, STBY=STBY1 ---
+        HAL_GPIO_WritePin(B11_GPIO_Port, B11_Pin, in1_state[m[3].direction]);
+        HAL_GPIO_WritePin(B12_GPIO_Port, B12_Pin, in2_state[m[3].direction]);
+        TIM4->CCR1 = m[3].pwm;
+
+        // --- Motor 2A (index 4): IN1=A21, IN2=A22, PWM=pwmA2, STBY=STBY2 ---
+        HAL_GPIO_WritePin(A21_GPIO_Port, A21_Pin, in1_state[m[4].direction]);
+        HAL_GPIO_WritePin(A22_GPIO_Port, A22_Pin, in2_state[m[4].direction]);
+        TIM3->CCR2 = m[4].pwm;
+
+        // --- Motor 2B (index 5): IN1=B21, IN2=B22, PWM=pwmB2, STBY=STBY2 ---
+        HAL_GPIO_WritePin(B21_GPIO_Port, B21_Pin, in1_state[m[5].direction]);
+        HAL_GPIO_WritePin(B22_GPIO_Port, B22_Pin, in2_state[m[5].direction]);
+        TIM3->CCR1 = m[5].pwm;
+
+        // --- STBY: LOW only if BOTH motors in the pair are dir 3 ---
+        HAL_GPIO_WritePin(STBY0_GPIO_Port, STBY0_Pin, (m[0].direction == 3 && m[1].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+        HAL_GPIO_WritePin(STBY1_GPIO_Port, STBY1_Pin, (m[2].direction == 3 && m[3].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+        HAL_GPIO_WritePin(STBY2_GPIO_Port, STBY2_Pin, (m[4].direction == 3 && m[5].direction == 3) ? GPIO_PIN_RESET : GPIO_PIN_SET);
+    }
+
+    uint32_t AD_RES_BUFFER[6] = {0};
+
+    uint8_t enable_adc_filter = 1;
+
+    // Spike rejection
+    uint16_t spike_threshold = 30;
+
+    // Smoothing strength (1–255)
+    // higher = smoother but slower
+    uint8_t smooth_k = 10;  
+
+    // Deadband (kills small noise completely)
+    uint16_t deadband = 12;
+
+    // Optional max step (rate limiter) (sets the max speed of the motor basically)
+    uint16_t max_step = 20;
+    uint8_t enable_rate_limit = 0;
+
+    uint16_t adc_filtered[6] = {0};
+    uint8_t adc_initialized[6] = {0};
+
+    uint16_t debug_raw = 0;
+    uint16_t debug_prev = 0;
+    // uint16_t debug_AD_RES_BUFFER = 0;
+    // int debug_count  = 0;
+
+
+    void read_ADC()
+    {
+        for (int i = 0; i < 6; i++)
         {
+            uint16_t raw = (uint16_t)AD_RES_BUFFER[i];
+            debug_raw = raw;
+
+            uint16_t prev = adc_filtered[i];
+            debug_prev = prev;
+
             if (!adc_initialized[i])
             {
                 adc_filtered[i] = raw;
-                adc_initialized[i] = raw;
                 motors[i].pos = raw;
+                adc_initialized[i] = 1;
                 continue;
             }
 
-            uint16_t prev = adc_filtered[i];
-
-            // ---- 1. Spike rejection ----
-            if (raw > prev + spike_threshold || raw + spike_threshold < prev)
+            if (enable_adc_filter)
             {
-                raw = prev;
-            }
+                // // ---- 1. Spike rejection ---- //removed temporarily because it's causing issues during initialization where it doesnt let the filtered value go above 0
+                // if (raw > prev + spike_threshold || raw + spike_threshold < prev)
+                // {
+                //     raw = prev;
+                //     // debug_count++;
+                // }
 
-            // ---- 2. Exponential smoothing ----
-            // new = (k*prev + raw) / (k+1)
-            uint16_t filtered = (prev * smooth_k + raw) / (smooth_k + 1);
+                // ---- 2. Deadband (this is what reduces "range to ~0") ----
+                if (raw > prev)
+                {
+                    if (raw - prev < deadband)
+                        raw = prev;
+                }
+                else
+                {
+                    if (prev - raw < deadband)
+                        raw = prev;
+                }
 
-            // ---- 3. Deadband (this is what reduces "range to ~0") ----
-            if (filtered > prev)
-            {
-                if (filtered - prev < deadband)
-                    filtered = prev;
+                // ---- 3. Exponential smoothing ----
+                // new = (k*prev + raw) / (k+1)
+                uint16_t filtered = (prev * smooth_k + raw) / (smooth_k + 1);
+
+                // ---- 4. Optional rate limiter ----
+                if (enable_rate_limit)
+                {
+                    if (filtered > prev + max_step)
+                        filtered = prev + max_step;
+                    else if (filtered + max_step < prev)
+                        filtered = prev - max_step;
+                }
+
+                adc_filtered[i] = filtered;
+                motors[i].pos = filtered;
             }
             else
             {
-                if (prev - filtered < deadband)
-                    filtered = prev;
+                motors[i].pos = raw;
+                adc_filtered[i] = raw;
             }
-
-            // ---- 4. Optional rate limiter ----
-            if (enable_rate_limit)
-            {
-                if (filtered > prev + max_step)
-                    filtered = prev + max_step;
-                else if (filtered + max_step < prev)
-                    filtered = prev - max_step;
-            }
-
-            adc_filtered[i] = filtered;
-            motors[i].pos = filtered;
-        }
-        else
-        {
-            motors[i].pos = raw;
         }
     }
-}
 
-/*--------------------debugging--------------------*/
+/*-------------------- adc filter analysis --------------------*/
     // #define VAR_SAMPLES 8
     int var_samples = 64;
     int var_to_check = 0;
@@ -271,13 +279,29 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 //     adc_flag = 1;
 // }
 
-/*----------------microrl----------------*/
+/*----------------microrl and USB CDC----------------*/
+
+    uint8_t TxBuffer[] = "Hello World! From STM32 USB CDC Device To Virtual COM Port\r\n";
+    volatile uint8_t usb_rx_flag = 0;
+    uint32_t usb_rx_len = 0;
+
+    #define RX_BUF_SIZE 256
+
+    uint8_t rx_buf[RX_BUF_SIZE];
+    volatile uint16_t rx_head = 0;
+    volatile uint16_t rx_tail = 0;
 
     void USB_CDC_RxHandler(uint8_t* Buf, uint32_t Len)
     {
         for (uint32_t i = 0; i < Len; i++)
         {
-            microrl_insert_char(prl, Buf[i]);
+            uint16_t next = (rx_head + 1) % RX_BUF_SIZE;
+
+            if (next != rx_tail)   // avoid overflow
+            {
+                rx_buf[rx_head] = Buf[i];
+                rx_head = next;
+            }
         }
     }
 
@@ -297,8 +321,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
     void print(const char * str)
     {
-        CDC_Transmit_FS((uint8_t*)str, strlen(str));
-        // CDC_Transmit_FS((uint8_t*)"EXEC\n", 5);
+        while (CDC_Transmit_FS((uint8_t*)str, strlen(str)) == USBD_BUSY);
     }
 
     volatile uint8_t sigint_flag = 0;
@@ -309,22 +332,29 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         sigint_flag = 1;
     }
 
+    typedef enum {
+        PARAM_U8,
+        PARAM_U16,
+        PARAM_INT
+    } ParamType;
+
     typedef struct {
-    const char* name;
-    int* ptr;
+        const char* name;
+        void* ptr;
+        ParamType type;
     } Param;
 
-    Param params[] = { // (cast to int* for uniformity)
-        {"spike_threshold", (int*)&spike_threshold},
-        {"adc_filter", (int*)&enable_adc_filter},
-        {"var_samples", (int*)&var_samples},
-        {"var_to_check", (int*)&var_to_check},
-        {"range_samples", (int*)&range_samples},
-        {"range_to_check", (int*)&range_to_check},
-        {"smooth_k", (int*)&smooth_k},  
-        {"deadband", (int*)&deadband},
-        {"max_step", (int*)&max_step},
-        {"enable_rate_limit", (int*)&enable_rate_limit} 
+    Param params[] = {
+        {"spike_threshold", &spike_threshold, PARAM_U16},
+        {"adc_filter", &enable_adc_filter, PARAM_U8},
+        {"var_samples", &var_samples, PARAM_INT},
+        {"var_to_check", &var_to_check, PARAM_INT},
+        {"range_samples", &range_samples, PARAM_INT},
+        {"range_to_check", &range_to_check, PARAM_INT},
+        {"smooth_k", &smooth_k, PARAM_U8},
+        {"deadband", &deadband, PARAM_U16},
+        {"max_step", &max_step, PARAM_U16},
+        {"enable_rate_limit", &enable_rate_limit, PARAM_U8}
     };
 
     #define PARAM_COUNT (sizeof(params) / sizeof(params[0]))
@@ -404,7 +434,20 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             {
                 if (strcmp(argv[1], params[i].name) == 0)
                 {
-                    *(params[i].ptr) = value;
+                    switch (params[i].type)
+                        {
+                            case PARAM_U8:
+                                *(uint8_t*)params[i].ptr = (uint8_t)value;
+                                break;
+
+                            case PARAM_U16:
+                                *(uint16_t*)params[i].ptr = (uint16_t)value;
+                                break;
+
+                            case PARAM_INT:
+                                *(int*)params[i].ptr = value;
+                                break;
+                        }
                     print("OK\n");
                     return 1;
                 }
@@ -429,7 +472,22 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
             {
                 if (strcmp(argv[1], params[i].name) == 0)
                 {
-                    sprintf(buf, "%d\n", *(params[i].ptr));
+                    int val = 0;
+                    switch (params[i].type)
+                    {
+                        case PARAM_U8:
+                            val = *(uint8_t*)params[i].ptr;
+                            break;
+
+                        case PARAM_U16:
+                            val = *(uint16_t*)params[i].ptr;
+                            break;
+
+                        case PARAM_INT:
+                            val = *(int*)params[i].ptr;
+                            break;
+                    }
+                    sprintf(buf, "%d\n", val);
                     print(buf);
                     return 1;
                 }
@@ -441,11 +499,20 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
         // ---------------- listparams ----------------
         if (strcmp(argv[0], "listparams") == 0)
         {
+            char buf[256];
+            int len = 0;
+
             for (int i = 0; i < PARAM_COUNT; i++)
             {
-                print(params[i].name);
-                print("\n");
+                int written = snprintf(buf + len, sizeof(buf) - len, "%s\r\n", params[i].name);
+
+                if (written <= 0 || len + written >= sizeof(buf))
+                    break;
+
+                len += written;
             }
+
+            print(buf);
             return 1;
         }
 
@@ -517,6 +584,14 @@ int main(void)
     // measure_adc_variation(var_to_check);
     measure_adc_range(range_to_check);
     motor_control(motors);
+
+    while (rx_tail != rx_head)
+    {
+        uint8_t ch = rx_buf[rx_tail];
+        rx_tail = (rx_tail + 1) % RX_BUF_SIZE;
+
+        microrl_insert_char(prl, ch);
+    }
 
     if (sigint_flag)
     {

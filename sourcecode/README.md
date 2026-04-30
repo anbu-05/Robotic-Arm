@@ -1,6 +1,8 @@
 # KNOWN BUGS:
-1. listparam doesnt really print anything. when using microsoft serial monitor.
-2. serious bug: different parameters are getting affected sometimes. like for example i set spike threshold, smoothk gets set to zero. there's some instability with the USB-CDC to microrl
+
+1. ~~listparam doesnt really print anything. when using microsoft serial monitor.~~
+2. ~~serious bug: different parameters are getting affected sometimes. like for example i set spike threshold, smoothk gets set to zero. there's some instability with the USB-CDC to microrl~~
+3. ~~the filtered values are staying at 0 even though raw values are updating.~~ spike rejection is causing filtered values to stay at 0. spike rejection is necessary tho -if you look at the filtered values and think about it.
 
 # CLI Commands
 
@@ -30,10 +32,6 @@ Params (dynamic):
 * var_to_check
 * range_samples
 * range_to_check
-* smooth_k
-* deadband
-* max_step
-* enable_rate_limit
 
 ---
 
@@ -48,11 +46,16 @@ Params (dynamic):
 * Non-blocking main loop
 * Real-time tuning (no reflashing)
 * Extensible parameter system (no execute() changes needed)
-* ADC filtering pipeline (spike rejection + smoothing + deadband + optional rate limit)
+
+---
 
 ---
 
 # ADC Filtering Details
+
+<!If this system evolves, consider adding a timing section (loop frequency, ADC sampling rate, effective filter bandwidth) to better understand control responsiveness.
+
+>
 
 Pipeline per channel:
 
@@ -60,7 +63,7 @@ Pipeline per channel:
    First sample is directly assigned to avoid spike rejection locking to zero.
 
 2. **Spike rejection**
-   Rejects sudden jumps larger than `spike_threshold` by clamping to previous value.
+   Rejects sudden jumps larger than `spike_threshold` by clamping to previous value. (note, spike rejection is turned off for now because it is causing issues during initialization)
 
 3. **Exponential smoothing**
    `filtered = (prev * smooth_k + raw) / (smooth_k + 1)`
@@ -79,36 +82,82 @@ Outputs:
 
 ---
 
-# Filter Parameters (What They Do)
+# All Parameters (What They Do)
+
+<!In future updates, include valid ranges and typical values for each parameter (e.g., smooth_k: 1–15). This avoids trial-and-error tuning during debugging.
+
+>
+
+## ADC Filtering Parameters
+
+* **adc_filter (0/1)**
+  Master enable for filtering.
+  0 → raw ADC values
+  1 → filtered pipeline enabled
 
 * **spike_threshold**
-  Max allowed jump between samples.
-  Lower → aggressive spike removal, may block real motion
-  Higher → allows faster changes, less protection
+  Max allowed jump between consecutive samples.
+  If exceeded, value is clamped to previous.
+  Too low → blocks real motion
+  Too high → spikes pass through
 
 * **smooth_k**
-  Strength of exponential smoothing.
-  Low (1–3) → fast, noisy
-  Medium (4–8) → balanced
-  High (8–15) → very smooth, more lag
+  Exponential smoothing strength.
+  Formula: `filtered = (prev * k + raw) / (k + 1)`
+  Higher → smoother but slower response
 
 * **deadband**
   Minimum change required to update output.
-  Low (0–3) → responsive, jitter visible
-  Medium (5–10) → stable, good for control
-  High (10+) → very stable, may feel "sticky"
+  Suppresses small fluctuations completely
 
-* **enable_rate_limit**
-  Toggle for rate limiting (0/1)
+* **enable_rate_limit (0/1)**
+  Enables step limiting per loop iteration
 
 * **max_step**
-  Max change per loop when rate limit is enabled.
-  Low → very smooth but slow response
-  High → closer to raw behavior
+  Maximum allowed change per loop when rate limiting is enabled
+
+---
+
+## ADC Debug Parameters
+
+* **var_samples**
+  Number of samples used for variation (diff-based noise measurement)
+
+* **var_to_check**
+  Channel index used for variation measurement
+
+* **range_samples**
+  Number of samples used for range (min-max window)
+
+* **range_to_check**
+  Channel index used for range measurement
+
+---
+
+## Internal Buffers (for reference)
+
+* **AD_RES_BUFFER[]**
+  Raw ADC DMA buffer (continuous updates)
+
+* **adc_filtered[]**
+  Final filtered output per channel
+
+* **adc_variation[]**
+  Average step difference (noise metric)
+
+* **adc_range[]**
+  Min-max range over a sample window
+
+* **motors[].pos**
+  Final value used by control system
 
 ---
 
 # Presets (Recommended Starting Points)
+
+<!You may want to add a CLI command mapping for presets (e.g., preset balanced) and document it here for faster switching during runtime.
+
+>
 
 **1. Debug (see real signal)**
 
@@ -187,6 +236,8 @@ Rule of thumb:
 
 ---
 
+<!Future entries could include measured results (before/after noise values, range reductions, etc.) to track quantitative improvements over time. >
+
 # Progress Log (CLI + Params)
 
 * Added microrl and wired USB RX → char stream into CLI
@@ -197,6 +248,13 @@ Rule of thumb:
 * Refactored params to table-driven lookup (no execute() edits needed)
 * Added getparam and listparams for visibility
 * Cleaned print() to restore proper CLI echo/output
+* Reworked USB RX to use ring buffer (decoupled ISR from processing)
+* Moved microrl_insert_char() into main loop (fixes RX–TX overlap risk)
+* Switched print() to blocking retry (temporary USB stability fix)
+* Fixed USB RX handler bug (nested function issue)
+* Hooked CDC_Receive_FS → USB_CDC_RxHandler
+* Verified microrl receives input via ring buffer
+* Observed listparams issue persists (likely TX-side or monitor-related)
 
 ---
 
