@@ -15,6 +15,21 @@
 * **stop \<motor>**
   Stop specific motor
 
+* **setpos \<motor> \<position> \<speed>**
+  Move motor to target position using closed-loop control
+
+* **getpos \<motor>**
+  Returns current position (ADC-based)
+
+* **stoppos \<motor>**
+  Disable position control for motor
+
+* **setdirflip \<motor> \<0|1>**
+  Flip motor direction logic (fix wiring mismatch)
+
+* **getdirflip \<motor>**
+  Read current flip_dir value
+
 * **setparam \<param> \<value>**
   Update runtime parameters
 
@@ -46,6 +61,8 @@ Params (dynamic):
 * Non-blocking main loop
 * Real-time tuning (no reflashing)
 * Extensible parameter system (no execute() changes needed)
+* Closed-loop position control (per motor)
+* Direction correction via software (flip_dir)
 
 ---
 
@@ -79,6 +96,33 @@ Outputs:
 
 * `adc_filtered[]` → filtered ADC values
 * `motors[].pos` → control input
+
+---
+
+# Position Control
+
+Basic closed-loop control using ADC position feedback.
+
+Behavior:
+
+* Motor moves toward `target_pos`
+* Speed limited by `target_pwm`
+* Stops when within small error band
+* Continuously corrects drift
+
+Internal logic:
+
+* Error = target - current
+* Direction based on sign of error
+* PWM proportional to error (P control)
+* Clamped to max speed
+
+Notes:
+
+* Depends heavily on ADC stability
+* Requires tuning of gain (`pos_kp`) and deadband
+* Too high gain → oscillation
+* Too low gain → slow response
 
 ---
 
@@ -258,6 +302,8 @@ Rule of thumb:
 * Hooked CDC_Receive_FS → USB_CDC_RxHandler
 * Verified microrl receives input via ring buffer
 * Observed listparams issue persists (likely TX-side or monitor-related)
+* Added position control (setpos, getpos, stoppos)
+* Added software direction correction (flip_dir control via CLI)
 
 ---
 
