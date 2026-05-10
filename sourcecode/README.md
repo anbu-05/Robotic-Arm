@@ -18,17 +18,17 @@
 * **setpos \<motor> \<position> \<speed>**
   Move motor to target position using closed-loop control
 
-* **getpos \<motor>**
-  Returns current position (ADC-based)
+* **getpos [\<motor>]**
+  Returns current position(s) (ADC-based). If no motor specified, prints all 6 positions (M0A, M0B, M1A, M1B, M2A, M2B), one per line
 
 * **stoppos \<motor>**
   Disable position control for motor
 
-* **setdirflip \<motor> \<0|1>**
-  Flip motor direction logic (fix wiring mismatch)
+* **setmotorparam \<motor> \<parameter> \<value>**
+  Set motor-specific parameter (flipdir, pos_start, pos_end)
 
-* **getdirflip \<motor>**
-  Read current flip_dir value
+* **getmotorparam \<motor> \<parameter>**
+  Get motor-specific parameter value
 
 * **setparam \<param> \<value>**
   Update runtime parameters
@@ -62,7 +62,7 @@ Params (dynamic):
 * Real-time tuning (no reflashing)
 * Extensible parameter system (no execute() changes needed)
 * Closed-loop position control (per motor)
-* Direction correction via software (flip_dir)
+* Direction correction via software (flipdir)
 
 ---
 
@@ -303,7 +303,9 @@ Rule of thumb:
 * Verified microrl receives input via ring buffer
 * Observed listparams issue persists (likely TX-side or monitor-related)
 * Added position control (setpos, getpos, stoppos)
-* Added software direction correction (flip_dir control via CLI)
+* Added software direction correction (flipdir control via CLI)
+* Renamed MotorState.flip_dir to flipdir and replaced setdirflip/getdirflip with setmotorparam/getmotorparam commands
+* Modified getpos command to optionally print all motor positions when no argument is provided
 
 ---
 

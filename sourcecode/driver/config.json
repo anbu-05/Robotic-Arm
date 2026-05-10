@@ -1,0 +1,44 @@
+{
+  "M0A": {
+    "name": "M0A",
+    "flipdir": 1,
+    "pos_start": 0,
+    "pos_end": 0,
+    "speed": 128
+  },
+  "M0B": {
+    "name": "M0B",
+    "flipdir": 0,
+    "pos_start": 0,
+    "pos_end": 4095,
+    "speed": 128
+  },
+  "M1A": {
+    "name": "M1A",
+    "flipdir": 0,
+    "pos_start": 1,
+    "pos_end": 1,
+    "speed": 128
+  },
+  "M1B": {
+    "name": "M1B",
+    "flipdir": 1,
+    "pos_start": 1,
+    "pos_end": 1,
+    "speed": 128
+  },
+  "M2A": {
+    "name": "M2A",
+    "flipdir": 0,
+    "pos_start": 1,
+    "pos_end": 1,
+    "speed": 64
+  },
+  "M2B": {
+    "name": "M2B",
+    "flipdir": 1,
+    "pos_start": 1,
+    "pos_end": 1,
+    "speed": 64
+  }
+}
