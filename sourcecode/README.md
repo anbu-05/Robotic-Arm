@@ -320,3 +320,9 @@ Rule of thumb:
 * Fixed initialization bug (filter stuck at 0 due to spike rejection)
 * Verified stable filtered output under noisy wiring conditions
 * Enabled runtime tuning of all filter parameters via CLI
+
+---
+
+# Progress Log (others - human made)
+
+- implemented position limiting. "The position_control() function has been updated to clamp the target position to the valid range"

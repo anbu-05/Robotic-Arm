@@ -88,3 +88,4 @@ v4 — two fixes:
 v5 - human changed
 1. the driver now calls setmotorparams for each motor at the start of a successful connection once -this'll set the motors parameters once
 2. we now save the changed motor speed to the config.json file as well, and load it up next time
+3. added two more markers on the sliders that indicate pos_start and pos_end

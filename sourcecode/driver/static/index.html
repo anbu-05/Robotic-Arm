@@ -381,6 +381,22 @@
     background: var(--accent);
     transition: left 0.15s;
   }
+  .pos-bar-start {
+    position: absolute;
+    width: 2px;
+    height: 6px;
+    top: -1px;
+    background: var(--muted);
+    transition: left 0.15s;
+  }
+  .pos-bar-end {
+    position: absolute;
+    width: 2px;
+    height: 6px;
+    top: -1px;
+    background: var(--muted);
+    transition: left 0.15s;
+  }
 
   .bottom-row {
     display: flex;
@@ -599,6 +615,7 @@ async function applyMotorConfig(motorId) {
   if (r.ok) {
     log(`${motorId} config applied. fw: ${r.firmware_replies.join(" | ")}`, "log-rx");
     motorConfig[motorId] = { ...motorConfig[motorId], ...cfg };
+    updatePosMarkers(motorId);
   } else {
     log(`error: ${r.error}`, "log-err");
   }
@@ -676,11 +693,11 @@ function buildMotorCards() {
         </div>
         <div class="const-group">
           <span class="const-label">pos_start</span>
-          <input class="const-input" id="pos_start-${motorId}" type="number" min="0" max="4095" value="${cfg.pos_start}">
+          <input class="const-input" id="pos_start-${motorId}" type="number" min="0" max="4095" value="${cfg.pos_start}" onchange="updatePosMarkers('${motorId}')">
         </div>
         <div class="const-group">
           <span class="const-label">pos_end</span>
-          <input class="const-input" id="pos_end-${motorId}" type="number" min="0" max="4095" value="${cfg.pos_end}">
+          <input class="const-input" id="pos_end-${motorId}" type="number" min="0" max="4095" value="${cfg.pos_end}" onchange="updatePosMarkers('${motorId}')">
         </div>
       </div>
 
@@ -703,6 +720,8 @@ function buildMotorCards() {
       <div class="pos-bar-wrap">
         <div class="pos-bar-cur" id="bar-cur-${motorId}" style="width:0%"></div>
         <div class="pos-bar-tgt" id="bar-tgt-${motorId}" style="left:0%"></div>
+        <div class="pos-bar-start" id="bar-start-${motorId}"></div>
+        <div class="pos-bar-end" id="bar-end-${motorId}"></div>
       </div>
 
       <div class="status-row">
@@ -727,6 +746,7 @@ function buildMotorCards() {
     `;
 
     area.appendChild(card);
+    updatePosMarkers(motorId);
   });
 }
 
@@ -763,6 +783,16 @@ function onSpeedNum(motorId, val) {
   saveMotorSpeed(motorId, val);
 }
 
+function updatePosMarkers(motorId) {
+  const startVal = parseInt(document.getElementById(`pos_start-${motorId}`).value) || 0;
+  let endVal = parseInt(document.getElementById(`pos_end-${motorId}`).value);
+  if (isNaN(endVal)) endVal = 4095;
+  const barStart = document.getElementById(`bar-start-${motorId}`);
+  const barEnd = document.getElementById(`bar-end-${motorId}`);
+  if (barStart) barStart.style.left = (startVal / 4095 * 100) + "%";
+  if (barEnd) barEnd.style.left = (endVal / 4095 * 100) + "%";
+}
+
 async function saveMotorSpeed(motorId, speed) {
   const r = await api("/api/motor_speed", "POST", { motor_id: motorId, speed });
   if (!r.ok) {
@@ -782,6 +812,7 @@ async function fetchMotorParams() {
     if (p.pos_start !== null) document.getElementById(`pos_start-${m}`).value = p.pos_start;
     if (p.pos_end   !== null) document.getElementById(`pos_end-${m}`).value   = p.pos_end;
     log(`${m}: flipdir=${p.flipdir} pos_start=${p.pos_start} pos_end=${p.pos_end}`, "log-rx");
+    updatePosMarkers(m);
   });
 }
 
