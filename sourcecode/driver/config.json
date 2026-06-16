@@ -4,7 +4,7 @@
     "flipdir": 1,
     "pos_start": 100,
     "pos_end": 4000,
-    "speed": 128
+    "speed": 200
   },
   "M0B": {
     "name": "M0B",
@@ -18,21 +18,21 @@
     "flipdir": 0,
     "pos_start": 600,
     "pos_end": 3700,
-    "speed": 128
+    "speed": 64
   },
   "M1B": {
     "name": "M1B",
     "flipdir": 1,
     "pos_start": 700,
     "pos_end": 3600,
-    "speed": 128
+    "speed": 64
   },
   "M2A": {
     "name": "M2A",
     "flipdir": 0,
     "pos_start": 200,
     "pos_end": 4000,
-    "speed": 128
+    "speed": 64
   },
   "M2B": {
     "name": "M2B",

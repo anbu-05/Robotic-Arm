@@ -6,38 +6,47 @@
 
 # CLI Commands
 
-* **setmotor \<motor> \<pwm> \<dir>**
+* `setmotor <motor> <pwm> <dir>`
   Set motor PWM and direction
 
-* **stop**
+* `stop`
   Stop all motors
 
-* **stop \<motor>**
+* `stop motor`
   Stop specific motor
 
-* **setpos \<motor> \<position> \<speed>**
+* `setpos <motor> <position> <speed>`
   Move motor to target position using closed-loop control
 
-* **getpos [\<motor>]**
+* `getpos <motor>`
   Returns current position(s) (ADC-based). If no motor specified, prints all 6 positions (M0A, M0B, M1A, M1B, M2A, M2B), one per line
 
-* **stoppos \<motor>**
+* `stoppos <motor>`
   Disable position control for motor
 
-* **setmotorparam \<motor> \<parameter> \<value>**
+* `setmotorparam <motor> <parameter> <value>`
   Set motor-specific parameter (flipdir, pos_start, pos_end)
 
-* **getmotorparam \<motor> \<parameter>**
+* `getmotorparam <motor> <parameter>`
   Get motor-specific parameter value
 
-* **setparam \<param> \<value>**
+* `setparam <param> <value>`
   Update runtime parameters
 
-* **getparam \<param>**
+* `getparam <param>`
   Read parameter value
 
-* **listparams**
+* `listparams`
   List all parameters
+
+* `couple <master motor> <slave motor> <inverse>`
+  Couple two motors together for synchronized motion
+
+* `decouple <master motor>`
+  Remove motor coupling
+
+* `listcoupled`
+  Display all active motor couplings
 
 Params (dynamic):
 
@@ -63,6 +72,10 @@ Params (dynamic):
 * Extensible parameter system (no execute() changes needed)
 * Closed-loop position control (per motor)
 * Direction correction via software (flipdir)
+* Position limiting
+* Motor coupling (master/slave synchronized control)
+* Coupling inversion support
+* Coupling inspection via CLI
 
 ---
 
@@ -116,6 +129,7 @@ Internal logic:
 * Direction based on sign of error
 * PWM proportional to error (P control)
 * Clamped to max speed
+* Target position clamped to valid motor range
 
 Notes:
 
@@ -326,3 +340,46 @@ Rule of thumb:
 # Progress Log (others - human made)
 
 - implemented position limiting. "The position_control() function has been updated to clamp the target position to the valid range"
+
+
+- added motor coupling:
+
+  > you can couple two motors using `couple <master motor> <slave motor> <inverse>`. the inverse tells whether the motors need to spin in opposite directions. 
+
+  > the slave motor's position_control flag gets cleared, and a new flag is_slave is set to high, a new flag am_i_coupled_inversely (1 when it's coupled in the opposite direction) is set according to the <inverse> argument
+
+  > the master gets a new flag slave_index, which equals -1 for no slaves
+
+  > when two motors are coupled, both the motors use the master's pos reading. for each motor, if is_slave is high the motor gets skipped. then, position_control() checks whether it has a slave, if it does, it first computes the direction and pwm of the master first, and then sets the slaves direction (the same as master if am_i_coupled_inversely is 0, and opposite if am_i_coupled_inversely is 1) and pwm (the pwm is the same as the master).
+
+  > we'll also have a decouple `decouple <master motor>` command to decouples the master and the slave.
+
+  Updated main.c with motor coupling support:
+
+  Extended MotorState:
+    - is_slave
+    - am_i_coupled_inversely
+    - slave_index
+
+  Updated position_control():
+    - skips slave motors
+    - computes master first
+    - mirrors master direction/pwm to slave
+    - keeps slave pos synced to master position
+
+  Added commands in execute():
+    - `couple <master> <slave> <inverse>`
+    - `decouple <master>`
+
+  Ensured initialization:
+    - slave_index = -1 after memset(motors, 0, ...) in main()
+    - same reset in sigint()
+
+  Added safer handling for master stop / stoppos so coupled slave PWM is also cleared.
+
+  Added `listcoupled` command. It displays all coupled motor pairs with their direction mode in machine-readable format like getpos:
+
+  ```
+  No couplings: \n (empty line)
+  With couplings: M1A=M2B:same,M2A=M0A:inverse\n
+  ```

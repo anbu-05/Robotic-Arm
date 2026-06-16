@@ -158,6 +158,7 @@ def index():
 @app.route("/api/ports")
 def list_ports():
     ports = [p.device for p in serial.tools.list_ports.comports()]
+    ports.reverse()
     return jsonify(ports)
 
 @app.route("/api/connect", methods=["POST"])
