@@ -62,6 +62,9 @@ SHOW_ANGLE_SLIDERS = True
 SHOW_JOINT_LOCKS = True
 SHOW_LIMIT_SLIDERS = True
 SHOW_LIMIT_ARCS = True
+SHOW_SAVE_BUTTON = True
+AUTO_LOAD_CONFIG = True
+SAVE_IMAGE_WITH_CONFIG = True
 ```
 
 Joint limits are also set near the top:
@@ -80,3 +83,6 @@ START_JOINT_LIMITS_DEGREES = [
 - Orange arcs show the current visual joint limits.
 - The workspace circle shows the maximum reach from the shoulder.
 - The movement solver is simple and meant for visualization, not precise robot control.
+- Click `save config` to save the current setup to `arm_config.json`.
+- When `AUTO_LOAD_CONFIG` is `True`, the program loads `arm_config.json` on startup.
+- If `SAVE_IMAGE_WITH_CONFIG` is `True`, saving also writes `arm_workspace.png`.

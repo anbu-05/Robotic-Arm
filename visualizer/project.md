@@ -9,6 +9,9 @@ Current status:
 - Angle sliders are available again as an option controlled by `SHOW_ANGLE_SLIDERS`.
 - Joint locks are available with checkboxes controlled by `SHOW_JOINT_LOCKS`.
 - Joint limits are visible as orange arcs and editable with range sliders.
+- Current arm state can be saved to `arm_config.json` using the save button.
+- If `arm_config.json` exists and `AUTO_LOAD_CONFIG` is true, it is loaded on startup.
+- Saving also writes `arm_workspace.png` when `SAVE_IMAGE_WITH_CONFIG` is true.
 - Latest run produced this warning: `FigureCanvasAgg is non-interactive, and thus cannot be shown`.
 - This means Matplotlib is using the non-interactive `Agg` backend, so the slider window cannot open.
 - Running `MPLBACKEND=QtAgg python3 arm_workspace.py` failed because no Qt binding was installed.
@@ -36,10 +39,11 @@ Open decisions:
 - Whether the wrist should represent only a third link angle or also a target hand orientation.
 - Whether to use TkAgg, QtAgg, or a save-to-image fallback for environments without a GUI backend.
 - Whether dragging the elbow/wrist should preserve orientation differently.
-- Whether joint limits should be saved between runs.
+- Whether multiple named configs are needed later.
 
 Run notes:
 - Install dependencies inside the active venv with `pip install -r requirements.txt`.
 - Launch with `MPLBACKEND=QtAgg python3 arm_workspace.py`.
 - If Matplotlib says `/home/anbu/.config/matplotlib` is not writable, set `MPLCONFIGDIR=.matplotlib-cache` before running.
 - Human usage instructions live in `README.md`.
+- Use `save config` in the GUI to save lengths, angles, limits, and locks.

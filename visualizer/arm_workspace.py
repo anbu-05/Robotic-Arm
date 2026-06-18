@@ -1,4 +1,6 @@
+import json
 import math
+import os
 
 import matplotlib.pyplot as plt
 from matplotlib.patches import Arc
@@ -16,9 +18,14 @@ SHOW_ANGLE_SLIDERS = True
 SHOW_JOINT_LOCKS = True
 SHOW_LIMIT_SLIDERS = True
 SHOW_LIMIT_ARCS = True
+SHOW_SAVE_BUTTON = True
+AUTO_LOAD_CONFIG = True
+SAVE_IMAGE_WITH_CONFIG = True
 
 ANGLE_MIN_DEGREES = -180.0
 ANGLE_MAX_DEGREES = 180.0
+CONFIG_FILE_NAME = "arm_config.json"
+IMAGE_FILE_NAME = "arm_workspace.png"
 START_JOINT_LIMITS_DEGREES = [
     [-180.0, 180.0],
     [-180.0, 180.0],
@@ -264,6 +271,44 @@ def apply_new_lengths(link_lengths, text_boxes):
     return new_lengths
 
 
+def save_config(link_lengths, joint_angles, joint_limits, joint_locks):
+    config = {
+        "link_lengths_mm": link_lengths,
+        "joint_angles_degrees": joint_angles,
+        "joint_limits_degrees": joint_limits,
+        "joint_locks": joint_locks,
+    }
+
+    with open(CONFIG_FILE_NAME, "w", encoding="utf-8") as config_file:
+        json.dump(config, config_file, indent=2)
+
+
+def load_config(link_lengths, joint_angles, joint_limits, joint_locks):
+    if not AUTO_LOAD_CONFIG:
+        return link_lengths, joint_angles, joint_limits, joint_locks
+    if not os.path.exists(CONFIG_FILE_NAME):
+        return link_lengths, joint_angles, joint_limits, joint_locks
+
+    try:
+        with open(CONFIG_FILE_NAME, "r", encoding="utf-8") as config_file:
+            config = json.load(config_file)
+    except (OSError, json.JSONDecodeError):
+        return link_lengths, joint_angles, joint_limits, joint_locks
+
+    loaded_lengths = config.get("link_lengths_mm", link_lengths)
+    loaded_angles = config.get("joint_angles_degrees", joint_angles)
+    loaded_limits = config.get("joint_limits_degrees", joint_limits)
+    loaded_locks = config.get("joint_locks", joint_locks)
+
+    if len(loaded_lengths) != 3 or len(loaded_angles) != 3:
+        return link_lengths, joint_angles, joint_limits, joint_locks
+    if len(loaded_limits) != 3 or len(loaded_locks) != 3:
+        return link_lengths, joint_angles, joint_limits, joint_locks
+
+    loaded_angles = clamp_angles(loaded_angles, loaded_limits)
+    return loaded_lengths, loaded_angles, loaded_limits, loaded_locks
+
+
 def main():
     link_lengths = LINK_LENGTHS_MM.copy()
     joint_limits = []
@@ -272,6 +317,12 @@ def main():
 
     joint_angles = clamp_angles(START_ANGLES_DEGREES.copy(), joint_limits)
     joint_locks = START_JOINT_LOCKS.copy()
+    link_lengths, joint_angles, joint_limits, joint_locks = load_config(
+        link_lengths,
+        joint_angles,
+        joint_limits,
+        joint_locks,
+    )
     points = get_joint_positions(link_lengths, joint_angles)
     active_joint_index = None
     updating_sliders = False
@@ -390,6 +441,17 @@ def main():
             redraw()
 
         lock_buttons.on_clicked(on_lock_change)
+
+    if SHOW_SAVE_BUTTON:
+        save_axis = figure.add_axes([0.80, 0.68, 0.17, 0.05])
+        save_button = Button(save_axis, "save config")
+
+        def on_save(_):
+            save_config(link_lengths, joint_angles, joint_limits, joint_locks)
+            if SAVE_IMAGE_WITH_CONFIG:
+                figure.savefig(IMAGE_FILE_NAME)
+
+        save_button.on_clicked(on_save)
 
     def on_press(event):
         nonlocal active_joint_index
